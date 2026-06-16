@@ -73,7 +73,7 @@ class _PrediccionesPageState extends ConsumerState<PrediccionesPage> {
                   borderRadius: BorderRadius.circular(12),
                   border: Border.all(color: AppColors.premiumBlue.withValues(alpha: 0.3)),
                 ),
-                child: const Icon(Icons.psychology_rounded, color: AppColors.premiumBlue, size: 24),
+                child: const Icon(Icons.electric_bolt_rounded, color: AppColors.premiumBlue, size: 24),
               ),
               const SizedBox(width: 16),
               Expanded(
