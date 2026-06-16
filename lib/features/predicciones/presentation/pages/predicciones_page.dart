@@ -21,22 +21,14 @@ class _PrediccionesPageState extends ConsumerState<PrediccionesPage> {
   CompetitionModel? _selectedLeague;
   late int _selectedSeason;
   late DateTime _selectedDate;
-  late List<DateTime> _weekDays;
+  late DateTime _currentMonth;
 
   @override
   void initState() {
     super.initState();
     _selectedSeason = 2025;
     _selectedDate = DateTime.now();
-    _generateCalendarDays();
-  }
-
-  // Generates 14 days of calendar (7 days before, today, and 6 days after)
-  void _generateCalendarDays() {
-    final today = DateTime.now();
-    _weekDays = List.generate(14, (index) {
-      return today.subtract(const Duration(days: 3)).add(Duration(days: index));
-    });
+    _currentMonth = DateTime(_selectedDate.year, _selectedDate.month);
   }
 
   @override
@@ -233,117 +225,166 @@ class _PrediccionesPageState extends ConsumerState<PrediccionesPage> {
     );
   }
 
-  // Beautiful interactive calendar strip
+  // Beautiful interactive calendar grid in Dota 2 style
   Widget _buildCalendarSection() {
-    return GlassCard(
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+    final firstDayOfMonth = DateTime(_currentMonth.year, _currentMonth.month, 1);
+    final lastDayOfMonth = DateTime(_currentMonth.year, _currentMonth.month + 1, 0);
+    final daysInMonth = lastDayOfMonth.day;
+    
+    // Day of week for 1st day of month (1 = Mon, 7 = Sun)
+    final firstWeekday = firstDayOfMonth.weekday;
+    final leadingEmptyDays = firstWeekday - 1; // offset so Mon is first col
+    
+    final weekdays = ['LUN', 'MAR', 'MIÉ', 'JUE', 'VIE', 'SÁB', 'DOM'];
+    
+    return Center(
+      child: Container(
+        constraints: const BoxConstraints(maxWidth: 380),
+        child: GlassCard(
+          padding: const EdgeInsets.all(16),
+          borderColor: AppColors.premiumBlue.withValues(alpha: 0.3),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
+              // Header with Month and Navigation
               Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Icon(Icons.calendar_today_rounded, size: 16, color: AppColors.premiumBlue.withValues(alpha: 0.8)),
-                  const SizedBox(width: 8),
+                  IconButton(
+                    icon: const Icon(Icons.chevron_left_rounded, color: AppColors.premiumBlue),
+                    onPressed: () {
+                      setState(() {
+                        _currentMonth = DateTime(_currentMonth.year, _currentMonth.month - 1);
+                      });
+                    },
+                  ),
                   Text(
-                    'CALENDARIO DE ENCUENTROS',
-                    style: AppTypography.labelSmall.copyWith(letterSpacing: 1),
+                    DateFormat('MMMM yyyy', 'es').format(_currentMonth).toUpperCase(),
+                    style: AppTypography.labelSmall.copyWith(
+                      color: AppColors.premiumBlue,
+                      fontWeight: FontWeight.bold,
+                      letterSpacing: 1.2,
+                    ),
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.chevron_right_rounded, color: AppColors.premiumBlue),
+                    onPressed: () {
+                      setState(() {
+                        _currentMonth = DateTime(_currentMonth.year, _currentMonth.month + 1);
+                      });
+                    },
                   ),
                 ],
               ),
-              Text(
-                DateFormat('MMMM yyyy', 'es').format(_selectedDate).toUpperCase(),
-                style: AppTypography.labelSmall.copyWith(color: AppColors.premiumBlue, fontWeight: FontWeight.bold),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          SizedBox(
-            height: 76,
-            child: ListView.builder(
-              scrollDirection: Axis.horizontal,
-              itemCount: _weekDays.length,
-              itemBuilder: (context, index) {
-                final day = _weekDays[index];
-                final isSelected = day.year == _selectedDate.year &&
-                    day.month == _selectedDate.month &&
-                    day.day == _selectedDate.day;
-                final isToday = day.year == DateTime.now().year &&
-                    day.month == DateTime.now().month &&
-                    day.day == DateTime.now().day;
-
-                final dayNum = DateFormat('d').format(day);
-                final dayName = DateFormat('E', 'es').format(day).substring(0, 3).toUpperCase();
-
-                return Padding(
-                  padding: const EdgeInsets.only(right: 8.0),
-                  child: GestureDetector(
-                    onTap: () {
-                      setState(() {
-                        _selectedDate = day;
-                      });
-                    },
-                    child: AnimatedContainer(
-                      duration: const Duration(milliseconds: 200),
-                      width: 58,
-                      decoration: BoxDecoration(
-                        color: isSelected ? const Color(0xFF050507) : Colors.black.withValues(alpha: 0.4),
-                        borderRadius: BorderRadius.circular(4),
-                        border: Border.all(
-                          color: isSelected
-                              ? AppColors.primary
-                              : isToday
-                                  ? AppColors.primary.withValues(alpha: 0.6)
-                                  : AppColors.primary.withValues(alpha: 0.15),
-                          width: isSelected ? 1.8 : 1.0,
-                        ),
-                        boxShadow: isSelected
-                            ? [BoxShadow(color: AppColors.primary.withValues(alpha: 0.25), blurRadius: 6)]
-                            : null,
-                      ),
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Text(
-                            dayName,
-                            style: AppTypography.labelSmall.copyWith(
-                              fontSize: 9,
-                              color: AppColors.primary,
-                              fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                            ),
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            dayNum,
-                            style: AppTypography.headlineMedium.copyWith(
-                              fontSize: 18,
-                              height: 1,
-                              color: Colors.white,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          if (isToday) ...[
-                            const SizedBox(height: 3),
-                            Container(
-                              width: 4,
-                              height: 4,
-                              decoration: const BoxDecoration(
-                                color: AppColors.primary,
-                                shape: BoxShape.circle,
-                              ),
-                            )
-                          ]
-                        ],
+              const SizedBox(height: 10),
+              
+              // Weekday letters (orange)
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceAround,
+                children: weekdays.map((day) => Expanded(
+                  child: Center(
+                    child: Text(
+                      day,
+                      style: AppTypography.labelSmall.copyWith(
+                        fontSize: 10,
+                        color: AppColors.primary,
+                        fontWeight: FontWeight.bold,
                       ),
                     ),
                   ),
-                );
-              },
-            ),
+                )).toList(),
+              ),
+              const SizedBox(height: 8),
+              
+              // Days Grid
+              GridView.builder(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: 7,
+                  mainAxisSpacing: 6,
+                  crossAxisSpacing: 6,
+                  childAspectRatio: 1.0,
+                ),
+                itemCount: leadingEmptyDays + daysInMonth,
+                itemBuilder: (context, index) {
+                  if (index < leadingEmptyDays) {
+                    return const SizedBox();
+                  }
+                  
+                  final dayNumber = index - leadingEmptyDays + 1;
+                  final dayDate = DateTime(_currentMonth.year, _currentMonth.month, dayNumber);
+                  
+                  final isSelected = dayDate.year == _selectedDate.year &&
+                      dayDate.month == _selectedDate.month &&
+                      dayDate.day == _selectedDate.day;
+                      
+                  final isToday = dayDate.year == DateTime.now().year &&
+                      dayDate.month == DateTime.now().month &&
+                      dayDate.day == DateTime.now().day;
+                      
+                  return GestureDetector(
+                    onTap: () {
+                      setState(() {
+                        _selectedDate = dayDate;
+                      });
+                    },
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 150),
+                      decoration: BoxDecoration(
+                        color: isSelected 
+                            ? const Color(0xFF040508)
+                            : Colors.black.withValues(alpha: 0.3),
+                        borderRadius: BorderRadius.circular(4),
+                        border: Border.all(
+                          color: isSelected
+                              ? AppColors.premiumBlue
+                              : isToday
+                                  ? AppColors.premiumBlue.withValues(alpha: 0.6)
+                                  : AppColors.premiumBlue.withValues(alpha: 0.25),
+                          width: isSelected ? 1.5 : 0.8,
+                        ),
+                        boxShadow: isSelected
+                            ? [
+                                BoxShadow(
+                                  color: AppColors.premiumBlue.withValues(alpha: 0.3),
+                                  blurRadius: 6,
+                                )
+                              ]
+                            : null,
+                      ),
+                      child: Stack(
+                        alignment: Alignment.center,
+                        children: [
+                          Text(
+                            '$dayNumber',
+                            style: AppTypography.bodyMedium.copyWith(
+                              color: AppColors.primary,
+                              fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                              fontSize: 13,
+                            ),
+                          ),
+                          if (isToday)
+                            Positioned(
+                              bottom: 3,
+                              child: Container(
+                                width: 4,
+                                height: 4,
+                                decoration: const BoxDecoration(
+                                  color: AppColors.premiumBlue,
+                                  shape: BoxShape.circle,
+                                ),
+                              ),
+                            )
+                        ],
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }
