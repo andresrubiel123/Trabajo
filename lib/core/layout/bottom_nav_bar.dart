@@ -33,8 +33,8 @@ const _destinations = [
   ),
   _BottomNavDestination(
     label: 'Predicciones',
-    icon: Icons.psychology_outlined,
-    activeIcon: Icons.psychology_rounded,
+    icon: Icons.bolt_outlined,
+    activeIcon: Icons.bolt_rounded,
     route: AppRoutes.predicciones,
   ),
   _BottomNavDestination(

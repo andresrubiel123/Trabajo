@@ -289,18 +289,18 @@ class _PrediccionesPageState extends ConsumerState<PrediccionesPage> {
                       duration: const Duration(milliseconds: 200),
                       width: 58,
                       decoration: BoxDecoration(
-                        color: isSelected ? AppColors.premiumBlue.withValues(alpha: 0.15) : Colors.black,
-                        borderRadius: BorderRadius.circular(12),
+                        color: isSelected ? const Color(0xFF050507) : Colors.black.withValues(alpha: 0.4),
+                        borderRadius: BorderRadius.circular(4),
                         border: Border.all(
                           color: isSelected
-                              ? AppColors.premiumBlue
+                              ? AppColors.primary
                               : isToday
-                                  ? AppColors.premiumBlue.withValues(alpha: 0.6)
-                                  : AppColors.premiumBlue.withValues(alpha: 0.15),
+                                  ? AppColors.primary.withValues(alpha: 0.6)
+                                  : AppColors.primary.withValues(alpha: 0.15),
                           width: isSelected ? 1.8 : 1.0,
                         ),
                         boxShadow: isSelected
-                            ? [BoxShadow(color: AppColors.premiumBlue.withValues(alpha: 0.25), blurRadius: 6)]
+                            ? [BoxShadow(color: AppColors.primary.withValues(alpha: 0.25), blurRadius: 6)]
                             : null,
                       ),
                       child: Column(
@@ -310,7 +310,7 @@ class _PrediccionesPageState extends ConsumerState<PrediccionesPage> {
                             dayName,
                             style: AppTypography.labelSmall.copyWith(
                               fontSize: 9,
-                              color: isSelected ? AppColors.premiumBlue : AppColors.textSecondary,
+                              color: AppColors.primary,
                               fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
                             ),
                           ),
@@ -320,7 +320,7 @@ class _PrediccionesPageState extends ConsumerState<PrediccionesPage> {
                             style: AppTypography.headlineMedium.copyWith(
                               fontSize: 18,
                               height: 1,
-                              color: isSelected ? Colors.white : AppColors.textPrimary,
+                              color: Colors.white,
                               fontWeight: FontWeight.bold,
                             ),
                           ),
@@ -330,7 +330,7 @@ class _PrediccionesPageState extends ConsumerState<PrediccionesPage> {
                               width: 4,
                               height: 4,
                               decoration: const BoxDecoration(
-                                color: AppColors.premiumBlue,
+                                color: AppColors.primary,
                                 shape: BoxShape.circle,
                               ),
                             )
