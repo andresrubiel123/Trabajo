@@ -1,0 +1,132 @@
+{
+  "mongodb_database": "gol_saint",
+  "collections": {
+    "usuarios": [
+      {
+        "_id": { "$oid": "60c72b2f9b1d8b2bad700001" },
+        "nombre": "Rubiel Andres Diaz",
+        "email": "rubiel@example.com",
+        "password": "$2b$10$xyz...",
+        "rol": "Usuario",
+        "suscripcion": {
+          "tipo": "Premium",
+          "estado": "Activa",
+          "fecha_inicio": { "$date": "2026-06-16T00:00:00Z" },
+          "fecha_fin": { "$date": "2027-06-16T00:00:00Z" },
+          "id_pago": "pay_stripe_9823412"
+        },
+        "created_at": { "$date": "2026-06-16T04:00:00Z" },
+        "updated_at": { "$date": "2026-06-16T04:00:00Z" }
+      }
+    ],
+    "equipos": [
+      {
+        "_id": { "$oid": "60c72b2f9b1d8b2bad700002" },
+        "nombre": "Real Madrid",
+        "escudo_url": "https://example.com/escudos/real_madrid.png",
+        "rating_general": 88,
+        "api_football_data_id": 86,
+        "api_sportsdb_id": 1337,
+        "pais": {
+          "codigo": "ESP",
+          "nombre": "España",
+          "bandera_url": "https://example.com/banderas/esp.png"
+        },
+        "created_at": { "$date": "2026-06-16T04:00:00Z" },
+        "updated_at": { "$date": "2026-06-16T04:00:00Z" }
+      }
+    ],
+    "jugadores": [
+      {
+        "_id": { "$oid": "60c72b2f9b1d8b2bad700003" },
+        "nombre": "Kylian Mbappé",
+        "edad": 27,
+        "equipo_id": { "$oid": "60c72b2f9b1d8b2bad700002" },
+        "atributos": {
+          "velocidad": 97,
+          "definicion": 90,
+          "pase": 80,
+          "regate": 92,
+          "defensa": 36,
+          "fisico": 78
+        },
+        "rating_general": 91,
+        "historial_ratings": [
+          {
+            "fecha": { "$date": "2025-06-16T00:00:00Z" },
+            "velocidad": 96,
+            "definicion": 89,
+            "pase": 78,
+            "regate": 91,
+            "defensa": 35,
+            "fisico": 77,
+            "rating_general": 90
+          },
+          {
+            "fecha": { "$date": "2026-06-16T00:00:00Z" },
+            "velocidad": 97,
+            "definicion": 90,
+            "pase": 80,
+            "regate": 92,
+            "defensa": 36,
+            "fisico": 78,
+            "rating_general": 91
+          }
+        ],
+        "created_at": { "$date": "2026-06-16T04:00:00Z" },
+        "updated_at": { "$date": "2026-06-16T04:00:00Z" }
+      }
+    ],
+    "competiciones": [
+      {
+        "_id": { "$oid": "60c72b2f9b1d8b2bad700009" },
+        "nombre": "La Liga EA Sports",
+        "tipo": "liga",
+        "logo_url": "https://example.com/logos/laliga.png",
+        "liga": {
+          "nombre": "Primera División de España",
+          "logo_url": "https://example.com/logos/laliga_primera.png"
+        },
+        "created_at": { "$date": "2026-06-16T04:00:00Z" },
+        "updated_at": { "$date": "2026-06-16T04:00:00Z" }
+      }
+    ],
+    "partidos": [
+      {
+        "_id": { "$oid": "60c72b2f9b1d8b2bad700010" },
+        "equipo_local_id": { "$oid": "60c72b2f9b1d8b2bad700002" },
+        "equipo_visitante_id": { "$oid": "60c72b2f9b1d8b2bad700055" },
+        "fecha": { "$date": "2026-06-20T20:00:00Z" },
+        "estado": "Programado",
+        "competicion_id": { "$oid": "60c72b2f9b1d8b2bad700009" },
+        "estadisticas": {
+          "posesion_local": 0,
+          "posesion_visitante": 0,
+          "tiros_local": 0,
+          "tiros_visitante": 0,
+          "corners": 0
+        },
+        "cuotas": [
+          {
+            "casa_apuesta": "Bet365",
+            "local": 1.45,
+            "empate": 4.50,
+            "visitante": 6.80,
+            "fecha_actualizacion": { "$date": "2026-06-16T04:00:00Z" }
+          }
+        ],
+        "pronostico": {
+          "probabilidad_local": 65,
+          "probabilidad_empate": 20,
+          "probabilidad_visitante": 15,
+          "recomendacion": "Victoria Local (Real Madrid)",
+          "analisis_detalle": "El Real Madrid cuenta con plantel completo y una racha invicta de local, mientras que el visitante tiene bajas importantes en la defensa.",
+          "es_premium": true,
+          "fecha_generacion": { "$date": "2026-06-16T04:00:00Z" }
+        },
+        "created_at": { "$date": "2026-06-16T04:00:00Z" },
+        "updated_at": { "$date": "2026-06-16T04:00:00Z" }
+      }
+    ]
+  }
+}

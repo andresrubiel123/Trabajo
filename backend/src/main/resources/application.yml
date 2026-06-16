@@ -1,0 +1,74 @@
+spring:
+  application:
+    name: gol-saint-backend
+  data:
+    mongodb:
+      uri: mongodb://localhost:27017/gol_saint
+
+# =====================================================
+# GOL SAINT - Configuración de APIs Externas
+# Autor: Rubiel Andres Diaz
+# =====================================================
+api:
+  sportsdb:
+    base-url: https://www.thesportsdb.com/api/v1/json
+    # API Key gratuita de TheSportsDB (usuario: RubielFullStack)
+    api-key: "123"
+
+  footballdata:
+    base-url: https://api.football-data.org/v4
+    # API Key de Football-Data.org (usuario: Rubiel_Full_Stack)
+    api-key: "a974d8bd310c43cc8d2b20095b1eacaf"
+    # Competiciones disponibles en el plan gratuito
+    competitions:
+      # Copa Mundial de la FIFA
+      - code: "WC"
+        nombre: "Copa Mundial de la FIFA"
+        tipo: "COPA"
+      # Liga de Campeones de la UEFA
+      - code: "CL"
+        nombre: "Liga de Campeones de la UEFA"
+        tipo: "COPA"
+      # Bundesliga (Alemania)
+      - code: "BL1"
+        nombre: "Bundesliga"
+        tipo: "LIGA"
+      # Eredivisie (Países Bajos)
+      - code: "DED"
+        nombre: "Eredivisie"
+        tipo: "LIGA"
+      # Campeonato Brasileiro Serie A (Brasil)
+      - code: "BSA"
+        nombre: "Campeonato Brasileiro Série A"
+        tipo: "LIGA"
+      # Primera División (España - La Liga)
+      - code: "PD"
+        nombre: "Primera División"
+        tipo: "LIGA"
+      # Ligue 1 (Francia)
+      - code: "FL1"
+        nombre: "Ligue 1"
+        tipo: "LIGA"
+      # Championship (Inglaterra - Segunda división)
+      - code: "ELC"
+        nombre: "Campeonato"
+        tipo: "LIGA"
+      # Primeira Liga (Portugal)
+      - code: "PPL"
+        nombre: "Primeira Liga"
+        tipo: "LIGA"
+      # Campeonato de Europa (Eurocopa)
+      - code: "EC"
+        nombre: "Campeonato de Europa"
+        tipo: "COPA"
+      # Serie A (Italia)
+      - code: "SA"
+        nombre: "Serie A"
+        tipo: "LIGA"
+      # Premier League (Inglaterra)
+      - code: "PL"
+        nombre: "Premier League"
+        tipo: "LIGA"
+
+server:
+  port: 8080
