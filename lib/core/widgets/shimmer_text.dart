@@ -27,17 +27,17 @@ class _ShimmerTextState extends State<ShimmerText> with SingleTickerProviderStat
     super.initState();
     _controller = AnimationController(
       vsync: this,
-      duration: const Duration(seconds: 10), // Ciclo completo de 10 segundos
+      duration: const Duration(seconds: 4), // Duración más natural
     )..repeat();
 
     _shimmerAnimation = TweenSequence<double>([
       TweenSequenceItem(
-        tween: Tween<double>(begin: -1.5, end: 1.5).chain(CurveTween(curve: Curves.easeInOut)),
-        weight: 15.0, // 15% del ciclo = 1.5 segundos barriendo el texto
+        tween: Tween<double>(begin: -2.5, end: 2.5).chain(CurveTween(curve: Curves.easeInOut)),
+        weight: 40.0, // 40% del tiempo haciendo el barrido
       ),
       TweenSequenceItem(
-        tween: ConstantTween<double>(1.5),
-        weight: 85.0, // 85% del ciclo = 8.5 segundos de espera al final (oculto)
+        tween: ConstantTween<double>(2.5),
+        weight: 60.0, // 60% del tiempo de espera al final
       ),
     ]).animate(_controller);
   }
@@ -58,22 +58,18 @@ class _ShimmerTextState extends State<ShimmerText> with SingleTickerProviderStat
           blendMode: BlendMode.srcIn,
           shaderCallback: (bounds) {
             return LinearGradient(
-              colors: [
-                const Color(0xFFF8FAFC), // Blanco pizarra muy claro (Slate 50)
-                const Color(0xFF94A3B8), // Gris pizarra suave (Slate 400)
-                Colors.white,            // Brillo metálico blanco puro (Diamante)
-                const Color(0xFF94A3B8), // Gris pizarra suave
-                const Color(0xFFF8FAFC), // Blanco pizarra
+              colors: const [
+                Color(0xFF94A3B8), // Gris base
+                Color(0xFFF8FAFC), // Brillo metálico blanco puro
+                Color(0xFF94A3B8), // Gris base
               ],
-              stops: [
-                0.0,
-                (val - 0.25).clamp(0.0, 1.0),
-                val.clamp(0.0, 1.0),
-                (val + 0.25).clamp(0.0, 1.0),
-                1.0,
+              stops: const [
+                0.15,
+                0.5,
+                0.85,
               ],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
+              begin: Alignment(val - 1.0, -0.3),
+              end: Alignment(val + 1.0, 0.3),
             ).createShader(Rect.fromLTWH(0, 0, bounds.width, bounds.height));
           },
           child: Text(

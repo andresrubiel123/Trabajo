@@ -62,6 +62,78 @@ class _DashboardHeader extends StatelessWidget {
       greeting = '¡Buenas noches!';
     }
 
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isMobile = screenWidth < 600;
+
+    if (isMobile) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: AppColors.premiumBlue.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: AppColors.premiumBlue.withValues(alpha: 0.3)),
+                ),
+                child: const Icon(Icons.home_rounded, color: AppColors.premiumBlue, size: 24),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    ShimmerText(greeting, style: AppTypography.bodySmall),
+                    const SizedBox(height: 2),
+                    ShimmerText('Dashboard', style: AppTypography.displaySmall),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 8),
+              // Live indicator compacto
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                decoration: BoxDecoration(
+                  color: AppColors.greenNeon.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(color: AppColors.greenNeon.withValues(alpha: 0.3)),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Container(
+                      width: 6,
+                      height: 6,
+                      decoration: const BoxDecoration(
+                        color: AppColors.greenNeon,
+                        shape: BoxShape.circle,
+                      ),
+                    ),
+                    const SizedBox(width: 4),
+                    Text(
+                      'ACTIVO',
+                      style: AppTypography.labelSmall.copyWith(
+                        color: AppColors.greenNeon,
+                        fontSize: 8,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          ShimmerText(
+            'Bienvenido al Combinador Profesional de Apuestas Deportivas',
+            style: AppTypography.bodyMedium.copyWith(color: AppColors.textSecondary),
+          ),
+        ],
+      );
+    }
+
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -155,14 +227,19 @@ class _StatsGrid extends StatelessWidget {
           color: AppColors.secondary),
     ];
 
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isMobile = screenWidth < 600;
+    // En móviles pequeños, necesitamos menor childAspectRatio para dar más altura vertical
+    final double aspectRatio = isMobile ? 1.5 : 2.4;
+
     return GridView.builder(
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
         crossAxisCount: 2,
-        crossAxisSpacing: 16,
-        mainAxisSpacing: 16,
-        childAspectRatio: 2.4,
+        crossAxisSpacing: 12,
+        mainAxisSpacing: 12,
+        childAspectRatio: aspectRatio,
       ),
       itemCount: stats.length,
       itemBuilder: (context, i) => _StatCardWidget(data: stats[i]),
@@ -189,39 +266,64 @@ class _StatCardWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isSmallMobile = screenWidth < 380;
+
     return GlassCard(
       glowColor: data.color,
-      padding: const EdgeInsets.all(16),
-      child: Row(
-        children: [
-          Container(
-            width: 44,
-            height: 44,
-            decoration: BoxDecoration(
-              color: data.color.withAlpha(26),
-              borderRadius: BorderRadius.circular(12),
-              border:
-                  Border.all(color: data.color.withAlpha(77), width: 0.5),
-            ),
-            child: Icon(data.icon, color: data.color, size: 22),
-          ),
-          const SizedBox(width: 14),
-          Expanded(
-            child: Column(
+      padding: const EdgeInsets.all(12),
+      child: isSmallMobile
+          ? Column(
               mainAxisAlignment: MainAxisAlignment.center,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                Icon(data.icon, color: data.color, size: 20),
+                const SizedBox(height: 6),
                 Text(
                   data.value,
-                  style: AppTypography.headlineLarge
-                      .copyWith(color: data.color),
+                  style: AppTypography.headlineMedium.copyWith(color: data.color, fontSize: 18),
                 ),
-                Text(data.label, style: AppTypography.bodySmall),
+                Text(
+                  data.label,
+                  style: AppTypography.bodySmall.copyWith(fontSize: 10),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ],
+            )
+          : Row(
+              children: [
+                Container(
+                  width: 38,
+                  height: 38,
+                  decoration: BoxDecoration(
+                    color: data.color.withAlpha(26),
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(color: data.color.withAlpha(77), width: 0.5),
+                  ),
+                  child: Icon(data.icon, color: data.color, size: 20),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        data.value,
+                        style: AppTypography.headlineMedium.copyWith(color: data.color, fontSize: 18),
+                      ),
+                      Text(
+                        data.label,
+                        style: AppTypography.bodySmall.copyWith(fontSize: 10),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ],
+                  ),
+                ),
               ],
             ),
-          ),
-        ],
-      ),
     );
   }
 }

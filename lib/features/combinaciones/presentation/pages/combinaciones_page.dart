@@ -141,8 +141,8 @@ class _CombinacionesPageState extends ConsumerState<CombinacionesPage>
         labelColor: AppColors.textOnAccent,
         unselectedLabelColor: AppColors.textSecondary,
         tabs: const [
-          Tab(text: '  Configurar Partidos  '),
-          Tab(text: '  Resultados  '),
+          Tab(text: 'Configurar'),
+          Tab(text: 'Resultados'),
         ],
       ),
     );
@@ -173,18 +173,20 @@ class _PageHeader extends StatelessWidget {
           ),
         ),
         const SizedBox(width: 16),
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            ShimmerText('Generar Combinaciones', style: AppTypography.headlineLarge),
-            const SizedBox(height: 4),
-            ShimmerText(
-              partidosCount > 0
-                  ? '$partidosCount partidos configurados'
-                  : 'Configura tus partidos y genera combinaciones',
-              style: AppTypography.bodySmall,
-            ),
-          ],
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              ShimmerText('Generar Combinaciones', style: AppTypography.headlineLarge),
+              const SizedBox(height: 4),
+              ShimmerText(
+                partidosCount > 0
+                    ? '$partidosCount partidos configurados'
+                    : 'Configura tus partidos y genera combinaciones',
+                style: AppTypography.bodySmall,
+              ),
+            ],
+          ),
         ),
       ],
     );
@@ -199,6 +201,45 @@ class _StatsRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isMobile = screenWidth < 600;
+
+    if (isMobile) {
+      return Column(
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: _StatCard(
+                  label: 'COMBINACIONES',
+                  value: '${state.totalFiltrado}',
+                  color: AppColors.primary,
+                  icon: Icons.grid_view_rounded,
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: _StatCard(
+                  label: 'BRUTO',
+                  value: '${state.totalBruto}',
+                  color: AppColors.textSecondary,
+                  icon: Icons.calculate_outlined,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          _StatCard(
+            label: 'FILTRADAS',
+            value: '${state.combinacionesEliminadas}',
+            color: AppColors.error,
+            icon: Icons.filter_alt_outlined,
+            isFullWidth: true,
+          ),
+        ],
+      );
+    }
+
     return Row(
       children: [
         Expanded(
@@ -238,30 +279,42 @@ class _StatCard extends StatelessWidget {
     required this.value,
     required this.color,
     required this.icon,
+    this.isFullWidth = false,
   });
 
   final String label;
   final String value;
   final Color color;
   final IconData icon;
+  final bool isFullWidth;
 
   @override
   Widget build(BuildContext context) {
     return GlassCard(
-      padding: const EdgeInsets.all(14),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
       glowColor: color,
       child: Row(
+        mainAxisAlignment: isFullWidth ? MainAxisAlignment.center : MainAxisAlignment.start,
         children: [
-          Icon(icon, color: color, size: 20),
-          const SizedBox(width: 10),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(value,
-                  style: AppTypography.headlineMedium
-                      .copyWith(color: color, fontSize: 20)),
-              Text(label, style: AppTypography.labelSmall),
-            ],
+          Icon(icon, color: color, size: 18),
+          const SizedBox(width: 8),
+          Flexible(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  value,
+                  style: AppTypography.headlineMedium.copyWith(color: color, fontSize: 16),
+                ),
+                Text(
+                  label,
+                  style: AppTypography.labelSmall.copyWith(fontSize: 9),
+                  overflow: TextOverflow.ellipsis,
+                  maxLines: 1,
+                ),
+              ],
+            ),
           ),
         ],
       ),

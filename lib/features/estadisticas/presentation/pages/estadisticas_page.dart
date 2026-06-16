@@ -4,13 +4,17 @@ import 'package:intl/intl.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_typography.dart';
 import '../../../../core/widgets/glass_card.dart';
+import '../../../../core/widgets/gradient_text.dart';
+import '../../../../core/widgets/shimmer_text.dart';
+import '../../../../core/widgets/dota_calendar.dart';
 import '../../../../core/api/providers/football_providers.dart';
 import '../../../../core/api/models/fixture_model.dart';
 import '../../../../core/api/services/football_service.dart';
-import '../../../../core/widgets/gradient_text.dart';
-import '../../../../core/widgets/shimmer_text.dart';
+import '../widgets/finished_match_card.dart';
 
+/// Pantalla de Resultados de partidos finalizados y en juego.
 class EstadisticasPage extends ConsumerStatefulWidget {
+  /// Constructor para [EstadisticasPage].
   const EstadisticasPage({super.key});
 
   @override
@@ -19,20 +23,20 @@ class EstadisticasPage extends ConsumerStatefulWidget {
 
 class _EstadisticasPageState extends ConsumerState<EstadisticasPage> {
   CompetitionModel? _selectedLeague;
-  late int _selectedSeason;
+  late DateTime _selectedDate;
+  late DateTime _currentMonth;
 
   @override
   void initState() {
     super.initState();
-    _selectedSeason = 2025; // Default season
+    _selectedDate = DateTime.now();
+    _currentMonth = DateTime(_selectedDate.year, _selectedDate.month);
   }
 
   @override
   Widget build(BuildContext context) {
-    // Consumimos el provider de competiciones del backend
     final competitionsAsync = ref.watch(competitionsProvider);
 
-    // Si ya cargaron las ligas y no hay una seleccionada, selecciona la primera
     if (competitionsAsync.value != null && competitionsAsync.value!.isNotEmpty && _selectedLeague == null) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         setState(() {
@@ -41,13 +45,12 @@ class _EstadisticasPageState extends ConsumerState<EstadisticasPage> {
       });
     }
 
-    // Parámetros para la consulta de partidos
+    // El parámetro season se deriva del año de la fecha seleccionada
     final fixtureParams = FixtureParams(
       leagueId: _selectedLeague?.id ?? 0,
-      season: _selectedSeason,
+      season: _selectedDate.year,
     );
 
-    // Consumimos el provider de partidos
     final fixturesAsync = ref.watch(fixturesProvider(fixtureParams));
 
     return Padding(
@@ -86,179 +89,137 @@ class _EstadisticasPageState extends ConsumerState<EstadisticasPage> {
           ),
           const SizedBox(height: 24),
 
-          // ── Selector de ligas populares (con Wrap para evitar desbordes) ────
-          competitionsAsync.when(
-            data: (leagues) {
-              if (leagues.isEmpty) {
-                return const Text('No hay competiciones disponibles.', style: TextStyle(color: AppColors.textSecondary));
-              }
-              return Wrap(
-                spacing: 8,
-                runSpacing: 8,
-                children: leagues.map((league) {
-                  final isSelected = _selectedLeague?.id == league.id;
-
-                  return GestureDetector(
-                    onTap: () {
-                      setState(() {
-                        _selectedLeague = league;
-                      });
-                    },
-                    child: AnimatedContainer(
-                      duration: const Duration(milliseconds: 200),
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                      decoration: BoxDecoration(
-                        color: Colors.black, // Fondo negro puro
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(
-                          color: isSelected ? AppColors.premiumBlue : AppColors.premiumBlue.withValues(alpha: 0.3),
-                          width: isSelected ? 1.5 : 0.8,
-                        ),
-                        boxShadow: isSelected
-                            ? [BoxShadow(color: AppColors.premiumBlue.withValues(alpha: 0.3), blurRadius: 8)]
-                            : null,
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          if (league.logo != null)
-                            Image.network(
-                              league.logo!,
-                              width: 20,
-                              height: 20,
-                              errorBuilder: (context, error, stackTrace) =>
-                                  const Icon(Icons.sports_soccer, size: 16, color: AppColors.textSecondary),
-                            )
-                          else
-                            const Icon(Icons.sports_soccer, size: 16, color: AppColors.textSecondary),
-                          const SizedBox(width: 8),
-                          GradientText(
-                            league.name,
-                            style: AppTypography.labelLarge.copyWith(
-                              fontSize: 13,
-                              fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  );
-                }).toList(),
-              );
-            },
-            loading: () => const Center(child: CircularProgressIndicator(color: AppColors.greenNeon)),
-            error: (err, stack) => Text('Error al cargar ligas: $err', style: const TextStyle(color: Colors.red)),
-          ),
-          const SizedBox(height: 16),
-
-          // ── Selector de Temporadas (Fecha actual 2026 hasta 2023) ───────────
-          SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            child: Row(
-              children: [
-                Text('Temporada: ', style: AppTypography.bodySmall.copyWith(color: AppColors.textSecondary)),
-                const SizedBox(width: 8),
-                ...[2026, 2025, 2024, 2023].map((season) {
-                  final isSelected = season == _selectedSeason;
-                  return Padding(
-                    padding: const EdgeInsets.only(right: 8),
-                    child: ChoiceChip(
-                      label: Text(season.toString()),
-                      selected: isSelected,
-                      onSelected: (selected) {
-                        if (selected) {
-                          setState(() {
-                            _selectedSeason = season;
-                          });
-                        }
-                      },
-                      selectedColor: AppColors.greenNeon.withAlpha(51),
-                      backgroundColor: AppColors.glassWhite,
-                      labelStyle: TextStyle(
-                        color: isSelected ? AppColors.greenNeon : AppColors.textPrimary,
-                        fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                      ),
-                      side: BorderSide(
-                        color: isSelected ? AppColors.greenNeon : AppColors.border,
-                        width: 0.5,
-                      ),
-                    ),
-                  );
-                }),
-              ],
-            ),
-          ),
-          const SizedBox(height: 20),
-
-          // ── Resultados de partidos ──────────────────────────────────────────
+          // ── Split Layout ──────────────────────────────────────────────────
           Expanded(
-            child: fixturesAsync.when(
-              data: (fixtures) {
-                // Filtrar partidos desde la fecha actual (hoy) hacia atrás
-                final now = DateTime.now();
-                // Añadimos margen de 24 horas para cubrir diferencias de zona horaria y partidos en juego hoy
-                final pastFixtures = fixtures.where((f) {
-                  final matchDate = DateTime.fromMillisecondsSinceEpoch(f.fixture.timestamp * 1000);
-                  return matchDate.isBefore(now.add(const Duration(hours: 24)));
-                }).toList();
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                final isDesktop = constraints.maxWidth >= 850;
 
-                if (pastFixtures.isEmpty) {
-                  return Center(
-                    child: GlassCard(
-                      padding: const EdgeInsets.all(32),
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          const Icon(Icons.info_outline_rounded, size: 48, color: AppColors.textMuted),
-                          const SizedBox(height: 16),
-                          Text('No se encontraron partidos', style: AppTypography.bodyLarge),
-                          const SizedBox(height: 8),
-                          Text('No hay partidos finalizados o en juego para esta temporada aún.', style: AppTypography.bodySmall),
-                        ],
+                if (isDesktop) {
+                  return Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Panel izquierdo: Calendario y Ligas vertical
+                      SizedBox(
+                        width: 280,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            DotaCalendar(
+                              selectedDate: _selectedDate,
+                              currentMonth: _currentMonth,
+                              onDateSelected: (date) {
+                                setState(() {
+                                  _selectedDate = date;
+                                });
+                              },
+                              onMonthChanged: (month) {
+                                setState(() {
+                                  _currentMonth = month;
+                                });
+                              },
+                            ),
+                            const SizedBox(height: 20),
+                            const Padding(
+                              padding: EdgeInsets.symmetric(horizontal: 4.0),
+                              child: GradientText(
+                                'TORNEOS / LIGAS',
+                                style: TextStyle(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.bold,
+                                  letterSpacing: 1,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(height: 10),
+                            Expanded(
+                              child: _buildLeaguesVerticalList(competitionsAsync),
+                            ),
+                          ],
+                        ),
                       ),
+                      const SizedBox(width: 24),
+                      // Panel derecho: Lista de Resultados
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: 4.0),
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: [
+                                  const Text(
+                                    'RESULTADOS DEL DÍA',
+                                    style: TextStyle(
+                                      color: AppColors.textSecondary,
+                                      fontSize: 11,
+                                      fontWeight: FontWeight.bold,
+                                      letterSpacing: 1,
+                                    ),
+                                  ),
+                                  Text(
+                                    DateFormat('dd/MM/yyyy').format(_selectedDate),
+                                    style: const TextStyle(
+                                      color: AppColors.premiumBlue,
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            const SizedBox(height: 12),
+                            Expanded(
+                              child: _buildMatchesList(fixturesAsync),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  );
+                } else {
+                  // Adaptabilidad móvil
+                  return SingleChildScrollView(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        DotaCalendar(
+                          selectedDate: _selectedDate,
+                          currentMonth: _currentMonth,
+                          onDateSelected: (date) {
+                            setState(() {
+                              _selectedDate = date;
+                            });
+                          },
+                          onMonthChanged: (month) {
+                            setState(() {
+                              _currentMonth = month;
+                            });
+                          },
+                        ),
+                        const SizedBox(height: 16),
+                        _buildLeaguesHorizontalList(competitionsAsync),
+                        const SizedBox(height: 20),
+                        const Text(
+                          'RESULTADOS DEL DÍA',
+                          style: TextStyle(
+                            color: AppColors.textSecondary,
+                            fontSize: 11,
+                            fontWeight: FontWeight.bold,
+                            letterSpacing: 1,
+                          ),
+                        ),
+                        const SizedBox(height: 10),
+                        SizedBox(
+                          height: 500,
+                          child: _buildMatchesList(fixturesAsync),
+                        ),
+                      ],
                     ),
                   );
                 }
-
-                // Ordenar partidos de más reciente a más viejo (timestamp descendente)
-                final sortedFixtures = List<FixtureModel>.from(pastFixtures)
-                  ..sort((a, b) => b.fixture.timestamp.compareTo(a.fixture.timestamp));
-
-                return ListView.builder(
-                  physics: const BouncingScrollPhysics(),
-                  itemCount: sortedFixtures.length,
-                  itemBuilder: (context, index) {
-                    final fixture = sortedFixtures[index];
-                    return _buildFixtureCard(fixture);
-                  },
-                );
               },
-              loading: () => const Center(
-                child: CircularProgressIndicator(
-                  color: AppColors.greenNeon,
-                ),
-              ),
-              error: (error, stackTrace) => Center(
-                child: GlassCard(
-                  padding: const EdgeInsets.all(32),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const Icon(Icons.error_outline_rounded, size: 48, color: AppColors.redNeon),
-                      const SizedBox(height: 16),
-                      Text('Error de conexión', style: AppTypography.bodyLarge.copyWith(color: AppColors.redNeon)),
-                      const SizedBox(height: 8),
-                      Text(
-                        error.toString().contains('403') || error.toString().contains('Invalid API key')
-                            ? 'Tu API Key de API-Football es incorrecta o no tiene acceso a esta liga.'
-                            : 'No se pudieron cargar los datos de fútbol.',
-                        style: AppTypography.bodySmall,
-                        textAlign: TextAlign.center,
-                      ),
-                    ],
-                  ),
-                ),
-              ),
             ),
           ),
         ],
@@ -266,145 +227,200 @@ class _EstadisticasPageState extends ConsumerState<EstadisticasPage> {
     );
   }
 
-  Widget _buildFixtureCard(FixtureModel fixture) {
-    // Formatear fecha
-    final dateTime = DateTime.fromMillisecondsSinceEpoch(fixture.fixture.timestamp * 1000);
-    final formattedTime = DateFormat('HH:mm').format(dateTime);
-    final formattedDate = DateFormat('dd MMM, yyyy').format(dateTime);
+  // Lista de competiciones vertical (Escritorio)
+  Widget _buildLeaguesVerticalList(AsyncValue<List<CompetitionModel>> competitionsAsync) {
+    return competitionsAsync.when(
+      data: (leagues) {
+        if (leagues.isEmpty) {
+          return const Text('No hay competiciones disponibles.', style: TextStyle(color: AppColors.textSecondary));
+        }
+        return ListView.builder(
+          padding: EdgeInsets.zero,
+          itemCount: leagues.length,
+          itemBuilder: (context, index) {
+            final league = leagues[index];
+            final isSelected = _selectedLeague?.id == league.id;
 
-    // Obtener badge de estado
-    Color statusColor;
-    String statusLabel = fixture.fixture.status.short;
-
-    switch (fixture.fixture.status.short) {
-      case 'FT':
-        statusColor = AppColors.greenNeon;
-        statusLabel = 'Final';
-        break;
-      case '1H':
-      case '2H':
-      case 'HT':
-      case 'LIVE':
-        statusColor = AppColors.redNeon;
-        statusLabel = fixture.fixture.status.elapsed != null ? "${fixture.fixture.status.elapsed}'" : 'En Vivo';
-        break;
-      case 'NS':
-        statusColor = AppColors.cyanNeon;
-        statusLabel = 'Prog.';
-        break;
-      default:
-        statusColor = AppColors.textSecondary;
-    }
-
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
-      child: GlassCard(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-        child: Row(
-          children: [
-            // ── Fecha y Estado del Partido ─────────────────────────────
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(formattedTime, style: AppTypography.headlineMedium.copyWith(fontSize: 18, color: AppColors.textPrimary)),
-                const SizedBox(height: 4),
-                Text(formattedDate, style: AppTypography.labelSmall.copyWith(fontSize: 10, color: AppColors.textSecondary)),
-                const SizedBox(height: 8),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+            return Padding(
+              padding: const EdgeInsets.only(bottom: 8.0),
+              child: GestureDetector(
+                onTap: () {
+                  setState(() {
+                    _selectedLeague = league;
+                  });
+                },
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 200),
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
                   decoration: BoxDecoration(
-                    color: statusColor.withAlpha(26),
-                    borderRadius: BorderRadius.circular(6),
-                    border: Border.all(color: statusColor.withAlpha(100), width: 0.8),
+                    color: Colors.black,
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(
+                      color: isSelected ? AppColors.premiumBlue : AppColors.premiumBlue.withValues(alpha: 0.15),
+                      width: isSelected ? 1.5 : 0.8,
+                    ),
+                    boxShadow: isSelected
+                        ? [BoxShadow(color: AppColors.premiumBlue.withValues(alpha: 0.2), blurRadius: 6)]
+                        : null,
                   ),
-                  child: Text(
-                    statusLabel,
-                    style: AppTypography.labelSmall.copyWith(
-                      color: statusColor,
-                      fontSize: 10,
-                      fontWeight: FontWeight.w700,
+                  child: Row(
+                    children: [
+                      if (league.logo != null)
+                        Image.network(
+                          league.logo!,
+                          width: 20,
+                          height: 20,
+                          errorBuilder: (context, error, stackTrace) =>
+                              const Icon(Icons.sports_soccer, size: 16, color: AppColors.textSecondary),
+                        )
+                      else
+                        const Icon(Icons.sports_soccer, size: 16, color: AppColors.textSecondary),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: GradientText(
+                          league.name,
+                          style: AppTypography.labelLarge.copyWith(
+                            fontSize: 12,
+                            fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            );
+          },
+        );
+      },
+      loading: () => const Center(child: CircularProgressIndicator(color: AppColors.premiumBlue)),
+      error: (err, stack) => const SizedBox(),
+    );
+  }
+
+  // Lista de competiciones horizontal (Móvil)
+  Widget _buildLeaguesHorizontalList(AsyncValue<List<CompetitionModel>> competitionsAsync) {
+    return competitionsAsync.when(
+      data: (leagues) {
+        if (leagues.isEmpty) return const SizedBox();
+        return SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          child: Row(
+            children: leagues.map((league) {
+              final isSelected = _selectedLeague?.id == league.id;
+              return Padding(
+                padding: const EdgeInsets.only(right: 8.0),
+                child: GestureDetector(
+                  onTap: () {
+                    setState(() {
+                      _selectedLeague = league;
+                    });
+                  },
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 200),
+                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                    decoration: BoxDecoration(
+                      color: Colors.black,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: isSelected ? AppColors.premiumBlue : AppColors.premiumBlue.withValues(alpha: 0.3),
+                        width: isSelected ? 1.5 : 0.8,
+                      ),
+                      boxShadow: isSelected
+                          ? [BoxShadow(color: AppColors.premiumBlue.withValues(alpha: 0.3), blurRadius: 8)]
+                          : null,
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        if (league.logo != null)
+                          Image.network(
+                            league.logo!,
+                            width: 20,
+                            height: 20,
+                            errorBuilder: (context, error, stackTrace) =>
+                                const Icon(Icons.sports_soccer, size: 16, color: AppColors.textSecondary),
+                          )
+                        else
+                          const Icon(Icons.sports_soccer, size: 16, color: AppColors.textSecondary),
+                        const SizedBox(width: 8),
+                        GradientText(
+                          league.name,
+                          style: AppTypography.labelLarge.copyWith(
+                            fontSize: 13,
+                            fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 ),
-              ],
-            ),
-            const SizedBox(width: 16),
-            const SizedBox(
-              height: 60,
-              child: VerticalDivider(color: AppColors.border, width: 1),
-            ),
-            const SizedBox(width: 16),
+              );
+            }).toList(),
+          ),
+        );
+      },
+      loading: () => const Center(child: CircularProgressIndicator(color: AppColors.premiumBlue)),
+      error: (err, stack) => const SizedBox(),
+    );
+  }
 
-            // ── Equipos y Marcadores ───────────────────────────────────
-            Expanded(
+  // Lista de partidos finalizados filtrados por fecha
+  Widget _buildMatchesList(AsyncValue<List<FixtureModel>> fixturesAsync) {
+    return fixturesAsync.when(
+      data: (fixtures) {
+        final matches = fixtures.where((f) {
+          // Filtrar partidos finalizados o en vivo del día seleccionado
+          final matchDate = DateTime.fromMillisecondsSinceEpoch(f.fixture.timestamp * 1000);
+          final isSameDay = matchDate.year == _selectedDate.year &&
+              matchDate.month == _selectedDate.month &&
+              matchDate.day == _selectedDate.day;
+
+          return isSameDay;
+        }).toList();
+
+        if (matches.isEmpty) {
+          return Center(
+            child: GlassCard(
+              width: 450,
+              padding: const EdgeInsets.all(32),
               child: Column(
+                mainAxisSize: MainAxisSize.min,
                 children: [
-                  // Equipo Local
-                  Row(
-                    children: [
-                      Image.network(
-                        fixture.teams.home.logo ?? '',
-                        width: 24,
-                        height: 24,
-                        errorBuilder: (context, error, stackTrace) =>
-                            const Icon(Icons.shield, size: 20, color: AppColors.textSecondary),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Text(
-                          fixture.teams.home.name,
-                          style: AppTypography.bodyMedium.copyWith(fontWeight: FontWeight.w500),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      Text(
-                        fixture.goals.home != null ? fixture.goals.home.toString() : '-',
-                        style: AppTypography.bodyLarge.copyWith(
-                          fontWeight: FontWeight.w700,
-                          color: fixture.fixture.status.short == 'FT' ? AppColors.textPrimary : AppColors.cyanNeon,
-                        ),
-                      ),
-                    ],
+                  Icon(Icons.event_busy_rounded, size: 48, color: AppColors.premiumBlue.withValues(alpha: 0.6)),
+                  const SizedBox(height: 16),
+                  Text(
+                    'No hay partidos para este día',
+                    style: AppTypography.headlineSmall.copyWith(color: AppColors.textSecondary),
                   ),
-                  const SizedBox(height: 12),
-                  // Equipo Visitante
-                  Row(
-                    children: [
-                      Image.network(
-                        fixture.teams.away.logo ?? '',
-                        width: 24,
-                        height: 24,
-                        errorBuilder: (context, error, stackTrace) =>
-                            const Icon(Icons.shield, size: 20, color: AppColors.textSecondary),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Text(
-                          fixture.teams.away.name,
-                          style: AppTypography.bodyMedium.copyWith(fontWeight: FontWeight.w500),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      Text(
-                        fixture.goals.away != null ? fixture.goals.away.toString() : '-',
-                        style: AppTypography.bodyLarge.copyWith(
-                          fontWeight: FontWeight.w700,
-                          color: fixture.fixture.status.short == 'FT' ? AppColors.textPrimary : AppColors.cyanNeon,
-                        ),
-                      ),
-                    ],
+                  const SizedBox(height: 8),
+                  Text(
+                    'No se encontraron partidos finalizados o programados para el ${DateFormat('dd/MM/yyyy').format(_selectedDate)} en esta competición.',
+                    style: AppTypography.bodySmall,
+                    textAlign: TextAlign.center,
                   ),
                 ],
               ),
             ),
-          ],
-        ),
-      ),
+          );
+        }
+
+        // Ordenar de más reciente a más antiguo
+        final sortedMatches = List<FixtureModel>.from(matches)
+          ..sort((a, b) => b.fixture.timestamp.compareTo(a.fixture.timestamp));
+
+        return ListView.builder(
+          padding: EdgeInsets.zero,
+          itemCount: sortedMatches.length,
+          itemBuilder: (context, index) {
+            final match = sortedMatches[index];
+            return FinishedMatchCard(fixture: match);
+          },
+        );
+      },
+      loading: () => const Center(child: CircularProgressIndicator(color: AppColors.premiumBlue)),
+      error: (err, stack) => Text('Error al cargar partidos: $err', style: const TextStyle(color: Colors.red)),
     );
   }
 }
