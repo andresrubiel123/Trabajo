@@ -12,6 +12,7 @@ import '../../features/auth/presentation/providers/auth_provider.dart';
 import '../../features/combinaciones/presentation/pages/combinaciones_page.dart';
 import '../../features/configuracion/presentation/pages/configuracion_page.dart';
 import '../../features/dashboard/presentation/pages/dashboard_page.dart';
+import '../../features/predicciones/presentation/pages/predicciones_page.dart';
 import '../../features/estadisticas/presentation/pages/estadisticas_page.dart';
 import '../../features/historial/presentation/pages/historial_page.dart';
 import '../layout/main_layout.dart';
@@ -42,6 +43,12 @@ final routerProvider = Provider<GoRouter>((ref) {
             path: AppRoutes.dashboard,
             pageBuilder: (context, state) => const NoTransitionPage(
               child: DashboardPage(),
+            ),
+          ),
+          GoRoute(
+            path: AppRoutes.predicciones,
+            pageBuilder: (context, state) => const NoTransitionPage(
+              child: PrediccionesPage(),
             ),
           ),
           GoRoute(

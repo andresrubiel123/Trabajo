@@ -31,6 +31,12 @@ class _AppNavRailState extends State<AppNavRail> {
       route: AppRoutes.dashboard,
     ),
     NavItemModel(
+      label: 'Predicciones',
+      icon: Icons.psychology_outlined,
+      activeIcon: Icons.psychology_rounded,
+      route: AppRoutes.predicciones,
+    ),
+    NavItemModel(
       label: 'Generar Combinaciones',
       icon: Icons.auto_awesome_outlined,
       activeIcon: Icons.auto_awesome_rounded,

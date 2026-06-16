@@ -32,6 +32,12 @@ const _destinations = [
     route: AppRoutes.dashboard,
   ),
   _BottomNavDestination(
+    label: 'Predicciones',
+    icon: Icons.psychology_outlined,
+    activeIcon: Icons.psychology_rounded,
+    route: AppRoutes.predicciones,
+  ),
+  _BottomNavDestination(
     label: 'Generar',
     icon: Icons.auto_awesome_outlined,
     activeIcon: Icons.auto_awesome_rounded,
@@ -44,7 +50,7 @@ const _destinations = [
     route: AppRoutes.historial,
   ),
   _BottomNavDestination(
-    label: 'Estadísticas',
+    label: 'Resultados',
     icon: Icons.bar_chart_outlined,
     activeIcon: Icons.bar_chart_rounded,
     route: AppRoutes.estadisticas,

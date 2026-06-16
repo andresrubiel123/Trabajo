@@ -10,6 +10,7 @@ class AppRoutes {
   static const String login = '/login';
   static const String shell = '/';
   static const String dashboard = '/dashboard';
+  static const String predicciones = '/predicciones';
   static const String combinaciones = '/combinaciones';
   static const String historial = '/historial';
   static const String estadisticas = '/estadisticas';
