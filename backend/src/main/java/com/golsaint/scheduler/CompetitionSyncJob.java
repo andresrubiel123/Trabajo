@@ -23,15 +23,21 @@ public class CompetitionSyncJob {
 
     private final CompeticionRepository competicionRepository;
 
-    public Competicion getOrCreateCompeticion(ApiConfig.FootballData.Competicion configComp) {
-        return competicionRepository.findByNombre(configComp.getNombre()).orElseGet(() -> {
+    public Competicion getOrCreateCompeticion(ApiConfig.FootballData.Competicion configComp, String logoUrl) {
+        Competicion competicion = competicionRepository.findByNombre(configComp.getNombre()).orElse(null);
+        if (competicion == null) {
             log.info("Creando nueva competición: {}", configComp.getNombre());
-            Competicion competicion = Competicion.builder()
+            competicion = Competicion.builder()
                     .nombre(configComp.getNombre())
                     .tipo(configComp.getTipo())
-                    .logoUrl(null)
+                    .logoUrl(logoUrl)
                     .build();
             return competicionRepository.save(competicion);
-        });
+        } else if ((competicion.getLogoUrl() == null || competicion.getLogoUrl().trim().isEmpty()) && logoUrl != null && !logoUrl.trim().isEmpty()) {
+            competicion.setLogoUrl(logoUrl);
+            log.info("Logotipo de competición actualizado para: {}", configComp.getNombre());
+            return competicionRepository.save(competicion);
+        }
+        return competicion;
     }
 }

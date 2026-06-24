@@ -13,6 +13,12 @@ import org.springframework.web.bind.annotation.*;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
+import java.time.format.DateTimeFormatter;
+import com.golsaint.modules.competicion.repository.CompeticionRepository;
+import com.golsaint.modules.partido.repository.PartidoRepository;
+import com.golsaint.modules.partido.entity.Partido;
 
 /**
  * Controlador REST para activar manualmente la sincronización de datos deportivos.
@@ -36,6 +42,8 @@ public class SyncController {
     private final CompetitionSyncJob competitionSyncJob;
     private final TeamSyncJob teamSyncJob;
     private final EquipoRepository equipoRepository;
+    private final CompeticionRepository competicionRepository;
+    private final PartidoRepository partidoRepository;
     private final ApiConfig apiConfig;
 
     // ── Sync completo (todas las competiciones) ──────────────────────────────
@@ -140,7 +148,7 @@ public class SyncController {
         List<ApiConfig.FootballData.Competicion> configs = apiConfig.getFootballdata().getCompetitions();
         int creadas = 0;
         for (ApiConfig.FootballData.Competicion c : configs) {
-            Competicion comp = competitionSyncJob.getOrCreateCompeticion(c);
+            Competicion comp = competitionSyncJob.getOrCreateCompeticion(c, null);
             if (comp != null) creadas++;
         }
 
@@ -194,5 +202,99 @@ public class SyncController {
         ));
 
         return ResponseEntity.ok(new ApiResponse<>(true, "GOL SAINT Sync Status", info));
+    }
+
+    // ── Metadata Incremental para Flutter ─────────────────────────────────────
+
+    /**
+     * GET /api/v1/sync/metadata
+     * Retorna datos nuevos/modificados desde la marca de tiempo dada.
+     * Es consumido por el SyncService de la app Flutter para la sincronización local-first.
+     */
+    @GetMapping("/metadata")
+    public ResponseEntity<Map<String, Object>> getMetadata(@RequestParam(required = false) String since) {
+        log.info("[SyncController] Consulta de metadatos incremental, since: {}", since);
+        
+        LocalDateTime sinceTime = null;
+        if (since != null && !since.isEmpty()) {
+            try {
+                sinceTime = OffsetDateTime.parse(since).toLocalDateTime();
+            } catch (Exception e) {
+                try {
+                    sinceTime = LocalDateTime.parse(since);
+                } catch (Exception ex) {
+                    log.warn("No se pudo parsear la fecha since: {}", since);
+                }
+            }
+        }
+
+        final LocalDateTime finalSince = sinceTime;
+        List<Competicion> ligas = competicionRepository.findAll();
+        List<Equipo> equipos = equipoRepository.findAll();
+        List<Partido> partidos = partidoRepository.findAll();
+
+        if (finalSince != null) {
+            ligas = ligas.stream().filter(l -> l.getUpdatedAt() != null && l.getUpdatedAt().isAfter(finalSince)).toList();
+            equipos = equipos.stream().filter(e -> e.getUpdatedAt() != null && e.getUpdatedAt().isAfter(finalSince)).toList();
+            partidos = partidos.stream().filter(p -> p.getUpdatedAt() != null && p.getUpdatedAt().isAfter(finalSince)).toList();
+        }
+
+        Map<String, Object> responseData = new HashMap<>();
+        boolean hasChanges = !ligas.isEmpty() || !equipos.isEmpty() || !partidos.isEmpty();
+        responseData.put("hasChanges", hasChanges);
+
+        List<Map<String, Object>> ligasMapped = ligas.stream().map(l -> {
+            Map<String, Object> m = new HashMap<>();
+            m.put("id", l.getId());
+            m.put("nombre", l.getNombre());
+            m.put("pais", "Mundial");
+            m.put("logoUrl", l.getLogoUrl());
+            m.put("banderaUrl", null);
+            m.put("temporada", 2026);
+            m.put("updatedAt", l.getUpdatedAt() != null ? l.getUpdatedAt().toString() : LocalDateTime.now().toString());
+            return m;
+        }).toList();
+        responseData.put("ligas", ligasMapped);
+
+        List<Map<String, Object>> equiposMapped = equipos.stream().map(e -> {
+            Map<String, Object> m = new HashMap<>();
+            m.put("id", e.getId());
+            m.put("nombre", e.getNombre());
+            m.put("ligaId", 2000); 
+            m.put("pais", e.getPais());
+            m.put("escudoUrl", e.getEscudoUrl());
+            m.put("banderaUrl", null);
+            m.put("updatedAt", e.getUpdatedAt() != null ? e.getUpdatedAt().toString() : LocalDateTime.now().toString());
+            return m;
+        }).toList();
+        responseData.put("equipos", equiposMapped);
+
+        List<Map<String, Object>> partidosMapped = partidos.stream().map(p -> {
+            Map<String, Object> m = new HashMap<>();
+            m.put("id", p.getId());
+            
+            Map<String, Object> local = new HashMap<>();
+            local.put("id", p.getEquipoLocal() != null ? p.getEquipoLocal().getId() : 0);
+            local.put("nombre", p.getEquipoLocal() != null ? p.getEquipoLocal().getNombre() : "Local");
+            local.put("escudoUrl", p.getEquipoLocal() != null ? p.getEquipoLocal().getEscudoUrl() : null);
+            m.put("equipoLocal", local);
+            
+            Map<String, Object> visitante = new HashMap<>();
+            visitante.put("id", p.getEquipoVisitante() != null ? p.getEquipoVisitante().getId() : 0);
+            visitante.put("nombre", p.getEquipoVisitante() != null ? p.getEquipoVisitante().getNombre() : "Visitante");
+            visitante.put("escudoUrl", p.getEquipoVisitante() != null ? p.getEquipoVisitante().getEscudoUrl() : null);
+            m.put("equipoVisitante", visitante);
+            
+            m.put("ligaId", p.getCompeticion() != null ? p.getCompeticion().getId() : 2000);
+            m.put("fecha", p.getFecha() != null ? p.getFecha().toString() : OffsetDateTime.now().toString());
+            m.put("estado", p.getEstado());
+            m.put("golesLocal", p.getGolesLocal());
+            m.put("golesVisitante", p.getGolesVisitante());
+            m.put("updatedAt", p.getUpdatedAt() != null ? p.getUpdatedAt().toString() : LocalDateTime.now().toString());
+            return m;
+        }).toList();
+        responseData.put("partidos", partidosMapped);
+
+        return ResponseEntity.ok(responseData);
     }
 }

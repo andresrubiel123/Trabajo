@@ -10,6 +10,7 @@ import '../../../../core/widgets/dota_calendar.dart';
 import '../../../../core/api/providers/football_providers.dart';
 import '../../../../core/api/models/fixture_model.dart';
 import '../../../../core/api/services/football_service.dart';
+import '../../../../core/widgets/team_logo.dart';
 import '../widgets/finished_match_card.dart';
 
 /// Pantalla de Resultados de partidos finalizados y en juego.
@@ -25,6 +26,7 @@ class _EstadisticasPageState extends ConsumerState<EstadisticasPage> {
   CompetitionModel? _selectedLeague;
   late DateTime _selectedDate;
   late DateTime _currentMonth;
+  bool _hasClickedCalendarDate = false;
 
   @override
   void initState() {
@@ -39,8 +41,14 @@ class _EstadisticasPageState extends ConsumerState<EstadisticasPage> {
 
     if (competitionsAsync.value != null && competitionsAsync.value!.isNotEmpty && _selectedLeague == null) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
+        final copaMundial = competitionsAsync.value!.firstWhere(
+          (c) => c.name.toLowerCase().contains('copa mundial') || 
+                 c.name.toLowerCase().contains('world cup') ||
+                 c.name.toLowerCase().contains('mundial'),
+          orElse: () => competitionsAsync.value!.first,
+        );
         setState(() {
-          _selectedLeague = competitionsAsync.value!.first;
+          _selectedLeague = copaMundial;
         });
       });
     }
@@ -108,14 +116,17 @@ class _EstadisticasPageState extends ConsumerState<EstadisticasPage> {
                             DotaCalendar(
                               selectedDate: _selectedDate,
                               currentMonth: _currentMonth,
+                              isFutureDisabled: true,
                               onDateSelected: (date) {
                                 setState(() {
                                   _selectedDate = date;
+                                  _hasClickedCalendarDate = true;
                                 });
                               },
                               onMonthChanged: (month) {
                                 setState(() {
                                   _currentMonth = month;
+                                  _hasClickedCalendarDate = false;
                                 });
                               },
                             ),
@@ -150,7 +161,7 @@ class _EstadisticasPageState extends ConsumerState<EstadisticasPage> {
                                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                 children: [
                                   const Text(
-                                    'RESULTADOS DEL DÍA',
+                                    'RESULTADOS DE PARTIDOS',
                                     style: TextStyle(
                                       color: AppColors.textSecondary,
                                       fontSize: 11,
@@ -158,13 +169,45 @@ class _EstadisticasPageState extends ConsumerState<EstadisticasPage> {
                                       letterSpacing: 1,
                                     ),
                                   ),
-                                  Text(
-                                    DateFormat('dd/MM/yyyy').format(_selectedDate),
-                                    style: const TextStyle(
-                                      color: AppColors.premiumBlue,
-                                      fontSize: 12,
-                                      fontWeight: FontWeight.bold,
-                                    ),
+                                  Row(
+                                    children: [
+                                      Text(
+                                        _hasClickedCalendarDate
+                                            ? 'Día: ${DateFormat('dd/MM/yyyy').format(_selectedDate)}'
+                                            : 'Mes: ${DateFormat('MMMM yyyy', 'es').format(_currentMonth)}',
+                                        style: const TextStyle(
+                                          color: AppColors.premiumBlue,
+                                          fontSize: 12,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                      if (_hasClickedCalendarDate) ...[
+                                        const SizedBox(width: 8),
+                                        GestureDetector(
+                                          onTap: () {
+                                            setState(() {
+                                              _hasClickedCalendarDate = false;
+                                            });
+                                          },
+                                          child: Container(
+                                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                            decoration: BoxDecoration(
+                                              color: AppColors.premiumBlue.withValues(alpha: 0.15),
+                                              borderRadius: BorderRadius.circular(4),
+                                              border: Border.all(color: AppColors.premiumBlue.withValues(alpha: 0.3)),
+                                            ),
+                                            child: const Text(
+                                              'Ver Mes',
+                                              style: TextStyle(
+                                                color: AppColors.premiumBlue,
+                                                fontSize: 10,
+                                                fontWeight: FontWeight.bold,
+                                              ),
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    ],
                                   ),
                                 ],
                               ),
@@ -187,28 +230,76 @@ class _EstadisticasPageState extends ConsumerState<EstadisticasPage> {
                         DotaCalendar(
                           selectedDate: _selectedDate,
                           currentMonth: _currentMonth,
+                          isFutureDisabled: true,
                           onDateSelected: (date) {
                             setState(() {
                               _selectedDate = date;
+                              _hasClickedCalendarDate = true;
                             });
                           },
                           onMonthChanged: (month) {
                             setState(() {
                               _currentMonth = month;
+                              _hasClickedCalendarDate = false;
                             });
                           },
                         ),
                         const SizedBox(height: 16),
                         _buildLeaguesHorizontalList(competitionsAsync),
                         const SizedBox(height: 20),
-                        const Text(
-                          'RESULTADOS DEL DÍA',
-                          style: TextStyle(
-                            color: AppColors.textSecondary,
-                            fontSize: 11,
-                            fontWeight: FontWeight.bold,
-                            letterSpacing: 1,
-                          ),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            const Text(
+                              'RESULTADOS',
+                              style: TextStyle(
+                                color: AppColors.textSecondary,
+                                fontSize: 11,
+                                fontWeight: FontWeight.bold,
+                                letterSpacing: 1,
+                              ),
+                            ),
+                            Row(
+                              children: [
+                                Text(
+                                  _hasClickedCalendarDate
+                                      ? DateFormat('dd/MM/yyyy').format(_selectedDate)
+                                      : DateFormat('MMMM yyyy', 'es').format(_currentMonth),
+                                  style: const TextStyle(
+                                    color: AppColors.premiumBlue,
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                                if (_hasClickedCalendarDate) ...[
+                                  const SizedBox(width: 8),
+                                  GestureDetector(
+                                    onTap: () {
+                                      setState(() {
+                                        _hasClickedCalendarDate = false;
+                                      });
+                                    },
+                                    child: Container(
+                                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                      decoration: BoxDecoration(
+                                        color: AppColors.premiumBlue.withValues(alpha: 0.15),
+                                        borderRadius: BorderRadius.circular(4),
+                                        border: Border.all(color: AppColors.premiumBlue.withValues(alpha: 0.3)),
+                                      ),
+                                      child: const Text(
+                                        'Ver Mes',
+                                        style: TextStyle(
+                                          color: AppColors.premiumBlue,
+                                          fontSize: 10,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ],
+                            ),
+                          ],
                         ),
                         const SizedBox(height: 10),
                         SizedBox(
@@ -265,16 +356,13 @@ class _EstadisticasPageState extends ConsumerState<EstadisticasPage> {
                   ),
                   child: Row(
                     children: [
-                      if (league.logo != null)
-                        Image.network(
-                          league.logo!,
-                          width: 20,
-                          height: 20,
-                          errorBuilder: (context, error, stackTrace) =>
-                              const Icon(Icons.sports_soccer, size: 16, color: AppColors.textSecondary),
-                        )
-                      else
-                        const Icon(Icons.sports_soccer, size: 16, color: AppColors.textSecondary),
+                      TeamLogo(
+                        logoUrl: league.logo,
+                        width: 20,
+                        height: 20,
+                        fallbackIcon: Icons.sports_soccer,
+                        fallbackIconSize: 16,
+                      ),
                       const SizedBox(width: 10),
                       Expanded(
                         child: GradientText(
@@ -334,16 +422,13 @@ class _EstadisticasPageState extends ConsumerState<EstadisticasPage> {
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        if (league.logo != null)
-                          Image.network(
-                            league.logo!,
-                            width: 20,
-                            height: 20,
-                            errorBuilder: (context, error, stackTrace) =>
-                                const Icon(Icons.sports_soccer, size: 16, color: AppColors.textSecondary),
-                          )
-                        else
-                          const Icon(Icons.sports_soccer, size: 16, color: AppColors.textSecondary),
+                        TeamLogo(
+                          logoUrl: league.logo,
+                          width: 20,
+                          height: 20,
+                          fallbackIcon: Icons.sports_soccer,
+                          fallbackIconSize: 16,
+                        ),
                         const SizedBox(width: 8),
                         GradientText(
                           league.name,
@@ -366,21 +451,28 @@ class _EstadisticasPageState extends ConsumerState<EstadisticasPage> {
     );
   }
 
-  // Lista de partidos finalizados filtrados por fecha
+  // Lista de partidos finalizados filtrados por fecha o mes
   Widget _buildMatchesList(AsyncValue<List<FixtureModel>> fixturesAsync) {
     return fixturesAsync.when(
       data: (fixtures) {
         final matches = fixtures.where((f) {
-          // Filtrar partidos finalizados o en vivo del día seleccionado
           final matchDate = DateTime.fromMillisecondsSinceEpoch(f.fixture.timestamp * 1000);
-          final isSameDay = matchDate.year == _selectedDate.year &&
-              matchDate.month == _selectedDate.month &&
-              matchDate.day == _selectedDate.day;
-
-          return isSameDay;
+          
+          if (_hasClickedCalendarDate) {
+            return matchDate.year == _selectedDate.year &&
+                matchDate.month == _selectedDate.month &&
+                matchDate.day == _selectedDate.day;
+          } else {
+            return matchDate.year == _currentMonth.year &&
+                matchDate.month == _currentMonth.month;
+          }
         }).toList();
 
         if (matches.isEmpty) {
+          final dateInfo = _hasClickedCalendarDate
+              ? DateFormat('dd/MM/yyyy').format(_selectedDate)
+              : DateFormat('MMMM yyyy', 'es').format(_currentMonth);
+
           return Center(
             child: GlassCard(
               width: 450,
@@ -391,12 +483,12 @@ class _EstadisticasPageState extends ConsumerState<EstadisticasPage> {
                   Icon(Icons.event_busy_rounded, size: 48, color: AppColors.premiumBlue.withValues(alpha: 0.6)),
                   const SizedBox(height: 16),
                   Text(
-                    'No hay partidos para este día',
+                    'No hay partidos',
                     style: AppTypography.headlineSmall.copyWith(color: AppColors.textSecondary),
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    'No se encontraron partidos finalizados o programados para el ${DateFormat('dd/MM/yyyy').format(_selectedDate)} en esta competición.',
+                    'No se encontraron partidos para $dateInfo en esta competición.',
                     style: AppTypography.bodySmall,
                     textAlign: TextAlign.center,
                   ),
@@ -406,7 +498,7 @@ class _EstadisticasPageState extends ConsumerState<EstadisticasPage> {
           );
         }
 
-        // Ordenar de más reciente a más antiguo
+        // Ordenar de más reciente a más antiguo (para resultados)
         final sortedMatches = List<FixtureModel>.from(matches)
           ..sort((a, b) => b.fixture.timestamp.compareTo(a.fixture.timestamp));
 

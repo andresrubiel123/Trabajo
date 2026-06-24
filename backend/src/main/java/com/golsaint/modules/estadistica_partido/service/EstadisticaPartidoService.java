@@ -25,7 +25,6 @@ import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
-@SuppressWarnings("null")
 public class EstadisticaPartidoService {
 
     private final EstadisticaPartidoRepository estadisticaPartidoRepository;

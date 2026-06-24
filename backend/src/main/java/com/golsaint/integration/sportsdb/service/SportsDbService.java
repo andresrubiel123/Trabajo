@@ -37,18 +37,38 @@ public class SportsDbService {
                 .uri("/{apiKey}/searchteams.php?t={teamName}", apiKey, teamName)
                 .retrieve()
                 .bodyToMono(MAP_TYPE)
-                .doOnSuccess(r -> log.info("Datos de equipo recibidos para: {}", teamName))
-                .doOnError(e -> log.error("Error buscando equipo {}: {}", teamName, e.getMessage()))
+                .doOnSuccess(r -> {
+                    if (r != null && r.containsKey("teams") && r.get("teams") != null) {
+                        log.info("Datos de equipo recibidos para: {}", teamName);
+                    }
+                })
+                .doOnError(e -> {
+                    if (e instanceof org.springframework.web.reactive.function.UnsupportedMediaTypeException) {
+                        log.warn("No se pudo buscar el equipo {}: La API retornó HTML (probablemente por clave incorrecta o límites)", teamName);
+                    } else {
+                        log.error("Error buscando equipo {}: {}", teamName, e.getMessage());
+                    }
+                })
                 .onErrorResume(e -> Mono.empty());
     }
 
     public Mono<Map<String, Object>> getPlayersByTeam(String teamName) {
         log.debug("Consultando jugadores del equipo: {}", teamName);
+        if ("3".equals(apiKey) || "1".equals(apiKey) || apiKey == null || apiKey.trim().isEmpty()) {
+            log.warn("El endpoint 'searchplayers.php?t=' requiere una API Key de Patreon (pago). Omitiendo búsqueda de jugadores para: {}", teamName);
+            return Mono.empty();
+        }
         return webClient.get()
                 .uri("/{apiKey}/searchplayers.php?t={teamName}", apiKey, teamName)
                 .retrieve()
                 .bodyToMono(MAP_TYPE)
-                .doOnError(e -> log.error("Error buscando jugadores de {}: {}", teamName, e.getMessage()))
+                .doOnError(e -> {
+                    if (e instanceof org.springframework.web.reactive.function.UnsupportedMediaTypeException) {
+                        log.warn("No se pudieron buscar jugadores para {}: La API retornó HTML (probablemente por restricción de API Key o Patreon)", teamName);
+                    } else {
+                        log.error("Error buscando jugadores de {}: {}", teamName, e.getMessage());
+                    }
+                })
                 .onErrorResume(e -> Mono.empty());
     }
 
@@ -58,7 +78,13 @@ public class SportsDbService {
                 .uri("/{apiKey}/search_all_leagues.php?c={country}", apiKey, country)
                 .retrieve()
                 .bodyToMono(MAP_TYPE)
-                .doOnError(e -> log.error("Error buscando ligas de {}: {}", country, e.getMessage()))
+                .doOnError(e -> {
+                    if (e instanceof org.springframework.web.reactive.function.UnsupportedMediaTypeException) {
+                        log.warn("No se pudieron buscar ligas para el país {}: La API retornó HTML", country);
+                    } else {
+                        log.error("Error buscando ligas de {}: {}", country, e.getMessage());
+                    }
+                })
                 .onErrorResume(e -> Mono.empty());
     }
 
@@ -68,7 +94,13 @@ public class SportsDbService {
                 .uri("/{apiKey}/searchplayers.php?p={playerName}", apiKey, playerName)
                 .retrieve()
                 .bodyToMono(MAP_TYPE)
-                .doOnError(e -> log.error("Error buscando jugador {}: {}", playerName, e.getMessage()))
+                .doOnError(e -> {
+                    if (e instanceof org.springframework.web.reactive.function.UnsupportedMediaTypeException) {
+                        log.warn("No se pudo buscar el jugador {}: La API retornó HTML", playerName);
+                    } else {
+                        log.error("Error buscando jugador {}: {}", playerName, e.getMessage());
+                    }
+                })
                 .onErrorResume(e -> Mono.empty());
     }
 }

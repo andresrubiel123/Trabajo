@@ -56,6 +56,13 @@ class _AppNavRailState extends State<AppNavRail> {
       route: AppRoutes.estadisticas,
     ),
     NavItemModel(
+      label: 'Premium VIP',
+      icon: Icons.star_outline_rounded,
+      activeIcon: Icons.star_rounded,
+      route: AppRoutes.premium,
+      accentColor: const Color(0xFFFFD700), // Oro
+    ),
+    NavItemModel(
       label: 'Configuración',
       icon: Icons.settings_outlined,
       activeIcon: Icons.settings_rounded,
@@ -275,7 +282,7 @@ class _NavItemTileState extends State<_NavItemTile> with SingleTickerProviderSta
 
   @override
   Widget build(BuildContext context) {
-    final activeColor = AppColors.premiumBlue;
+    final activeColor = widget.item.accentColor ?? AppColors.premiumBlue;
     final isActive = widget.isActive;
 
     return MouseRegion(
@@ -329,7 +336,10 @@ class _NavItemTileState extends State<_NavItemTile> with SingleTickerProviderSta
                       if (isActive)
                         ShaderMask(
                           blendMode: BlendMode.srcIn,
-                          shaderCallback: (bounds) => AppColors.primaryGradient.createShader(
+                          shaderCallback: (bounds) => (widget.item.accentColor != null
+                                  ? LinearGradient(colors: [activeColor, activeColor.withValues(alpha: 0.8)])
+                                  : AppColors.primaryGradient)
+                              .createShader(
                             Rect.fromLTWH(0, 0, bounds.width, bounds.height),
                           ),
                           child: Icon(
@@ -342,7 +352,9 @@ class _NavItemTileState extends State<_NavItemTile> with SingleTickerProviderSta
                         Icon(
                           widget.item.icon,
                           size: 20,
-                          color: _isHovered ? AppColors.textPrimary : AppColors.navInactive,
+                          color: _isHovered 
+                              ? activeColor 
+                              : AppColors.navInactive,
                         ),
 
                       if (widget.isExpanded) ...[
@@ -351,6 +363,9 @@ class _NavItemTileState extends State<_NavItemTile> with SingleTickerProviderSta
                           child: isActive
                               ? GradientText(
                                   widget.item.label,
+                                  gradient: widget.item.accentColor != null
+                                      ? LinearGradient(colors: [activeColor, activeColor.withValues(alpha: 0.8)])
+                                      : null,
                                   style: const TextStyle(
                                     fontWeight: FontWeight.bold,
                                     fontSize: 14,
@@ -359,7 +374,7 @@ class _NavItemTileState extends State<_NavItemTile> with SingleTickerProviderSta
                               : Text(
                                   widget.item.label,
                                   style: AppTypography.bodyMedium.copyWith(
-                                    color: _isHovered ? AppColors.textPrimary : AppColors.navInactive,
+                                    color: _isHovered ? activeColor : AppColors.navInactive,
                                     fontWeight: FontWeight.w400,
                                     fontSize: 14,
                                   ),

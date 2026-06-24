@@ -4,6 +4,7 @@ import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_typography.dart';
 import '../../../../core/widgets/glass_card.dart';
 import '../../../../core/api/models/fixture_model.dart';
+import '../../../../core/widgets/team_logo.dart';
 
 /// Tarjeta para mostrar el resultado y estado de un partido finalizado o en curso.
 class FinishedMatchCard extends StatelessWidget {
@@ -94,12 +95,12 @@ class FinishedMatchCard extends StatelessWidget {
                   // Equipo Local
                   Row(
                     children: [
-                      Image.network(
-                        fixture.teams.home.logo ?? '',
+                      TeamLogo(
+                        logoUrl: fixture.teams.home.logo,
                         width: 24,
                         height: 24,
-                        errorBuilder: (context, error, stackTrace) =>
-                            const Icon(Icons.shield, size: 20, color: AppColors.textSecondary),
+                        fallbackIcon: Icons.shield,
+                        fallbackIconSize: 20,
                       ),
                       const SizedBox(width: 12),
                       Expanded(
@@ -124,12 +125,12 @@ class FinishedMatchCard extends StatelessWidget {
                   // Equipo Visitante
                   Row(
                     children: [
-                      Image.network(
-                        fixture.teams.away.logo ?? '',
+                      TeamLogo(
+                        logoUrl: fixture.teams.away.logo,
                         width: 24,
                         height: 24,
-                        errorBuilder: (context, error, stackTrace) =>
-                            const Icon(Icons.shield, size: 20, color: AppColors.textSecondary),
+                        fallbackIcon: Icons.shield,
+                        fallbackIconSize: 20,
                       ),
                       const SizedBox(width: 12),
                       Expanded(

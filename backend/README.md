@@ -1,6 +1,6 @@
 # GOL SAINT - Backend API ⚙️☕
 
-Módulo de servicios en Spring Boot encargado de integrar las APIs externas de fútbol, persistir los datos en PostgreSQL y servir los datos unificados a la aplicación móvil Flutter.
+Módulo de servicios en Spring Boot encargado de integrar las APIs externas de fútbol, persistir los datos en MongoDB y servir los datos unificados a la aplicación móvil Flutter.
 
 ---
 
@@ -8,10 +8,10 @@ Módulo de servicios en Spring Boot encargado de integrar las APIs externas de f
 
 | Componente | Tecnología |
 | :--- | :--- |
-| Lenguaje | Java 17 |
-| Framework | Spring Boot 3.2.5 |
-| ORM | Spring Data JPA + Hibernate |
-| Base de Datos | PostgreSQL 14.5 (Laragon `Analisis`) |
+| Lenguaje | Java 25 |
+| Framework | Spring Boot 4.1.0 |
+| ORM / Driver | Spring Data MongoDB |
+| Base de Datos | MongoDB (Base de datos: `gol_saint`) |
 | Cliente HTTP | Spring WebFlux (WebClient) |
 | Scheduler | `@Scheduled` (cron cada 6 horas) |
 
@@ -69,7 +69,7 @@ Football-Data.org      TheSportsDB
               ↓
         Merge / Fusión en memoria
               ↓
-      PostgreSQL (Analisis DB)
+       MongoDB (gol_saint DB)
               ↓
        Flutter App (Cliente)
 ```
@@ -79,23 +79,20 @@ Football-Data.org      TheSportsDB
 ## 🚀 Instrucciones de Ejecución
 
 ### 1. Prerequisitos
-- Laragon activo con PostgreSQL 14.5 en puerto `5432`
-- Base de datos `Analisis` creada en PostgreSQL
-- Java 17 instalado en el sistema
+- MongoDB activo en puerto `27017`
+- Java 25 instalado en el sistema
 
 ### 2. Configuración
-Edita `src/main/resources/application.yml` si necesitas cambiar las credenciales de la base de datos:
+Edita `src/main/resources/application.yml` si necesitas cambiar la URI de la base de datos:
 ```yaml
 spring:
-  datasource:
-    url: jdbc:postgresql://localhost:5432/Analisis
-    username: postgres
-    password: TU_CONTRASEÑA
+  mongodb:
+    uri: mongodb://localhost:27017/gol_saint
 ```
 
 ### 3. Ejecutar
 ```bash
-./mvnw spring-boot:run
+mvn spring-boot:run
 ```
 La API arranca en `http://localhost:8080`
 

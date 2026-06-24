@@ -13,8 +13,9 @@ import '../../domain/entities/partido_entity.dart';
 const _uuid = Uuid();
 
 /// Provider que maneja la lista de partidos editables.
-class PartidosNotifier extends StateNotifier<List<PartidoEntity>> {
-  PartidosNotifier() : super([]);
+class PartidosNotifier extends Notifier<List<PartidoEntity>> {
+  @override
+  List<PartidoEntity> build() => [];
 
   /// Agrega N partidos vacíos.
   void crearPartidos(int cantidad) {
@@ -74,6 +75,6 @@ class PartidosNotifier extends StateNotifier<List<PartidoEntity>> {
 }
 
 final partidosProvider =
-    StateNotifierProvider<PartidosNotifier, List<PartidoEntity>>(
-  (ref) => PartidosNotifier(),
+    NotifierProvider<PartidosNotifier, List<PartidoEntity>>(
+  () => PartidosNotifier(),
 );

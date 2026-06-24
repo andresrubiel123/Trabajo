@@ -31,7 +31,7 @@ graph TD
 
     %% Database Layer
     subgraph Database [Persistencia]
-        PostgreSQL[(PostgreSQL - Analisis DB)]
+        MongoDB[(MongoDB - gol_saint DB)]
     end
 
     %% External APIs Layer
@@ -42,15 +42,15 @@ graph TD
 
     %% Connections
     Flutter <-->|Peticiones HTTP REST| Controller
-    Controller <-->|Spring Data JPA| PostgreSQL
-    SyncService <-->|Persistencia y Caché| PostgreSQL
+    Controller <-->|Spring Data MongoDB| MongoDB
+    SyncService <-->|Persistencia y Caché| MongoDB
     WebClient -->|HTTP GET /v4/matches| FootballData
     WebClient -->|HTTP GET /searchteams.php| TheSportsDB
 
     %% Style
     style Flutter fill:#02569B,stroke:#0175C2,stroke-width:2px,color:#fff
     style SpringBoot fill:#6DB33F,stroke:#5ea035,stroke-width:2px,color:#fff
-    style PostgreSQL fill:#336791,stroke:#2b567a,stroke-width:2px,color:#fff
+    style MongoDB fill:#47A248,stroke:#3F8F41,stroke-width:2px,color:#fff
     style Sqflite fill:#005177,stroke:#002b3f,stroke-width:2px,color:#fff
 ```
 
@@ -58,7 +58,7 @@ graph TD
 1. Un **Cron Job (SyncService)** en Spring Boot se despierta cada 6 horas.
 2. Consulta nuevos partidos y ligas a través de **Football-Data.org**.
 3. Consulta detalles multimedia (escudos y jugadores) usando **TheSportsDB**.
-4. Realiza la combinación de datos (Merge) en memoria y los persiste en la base de datos **PostgreSQL (`Analisis`)**.
+4. Realiza la combinación de datos (Merge) en memoria y los persiste en la base de datos **MongoDB (`gol_saint`)**.
 5. La app de **Flutter** consume directamente los endpoints del backend en milisegundos, sin golpear las APIs externas.
 
 ---
@@ -73,15 +73,15 @@ ApuestasFutbol/ (GOL SAINT Workspace)
 │   ├── README.md (Documentación técnica del backend)
 │   └── src/
 │       └── main/
-│           ├── java/com/apuestas/futbol/
-│           │   ├── FutbolApplication.java (Punto de entrada)
+│           ├── java/com/golsaint/
+│           │   ├── GolSaintApplication.java (Punto de entrada)
 │           │   ├── controller/ (API Controllers)
-│           │   ├── model/ (Entidades de Base de Datos JPA)
-│           │   ├── repository/ (Interfaces Spring Data JPA)
+│           │   ├── model/ (Documentos de MongoDB)
+│           │   ├── repository/ (Interfaces Spring Data MongoDB)
 │           │   └── service/ (Consumo de APIs y Scheduler)
 │           └── resources/
 │               ├── application.yml (Credenciales y propiedades)
-│               └── schema.sql (Estructura de Base de Datos)
+│               └── DB Gol Saint.json (Estructura de la Base de Datos MongoDB)
 └── lib/ (Código fuente de Flutter Mobile App)
     ├── main.dart
     └── ... (Componentes UI y Providers de Flutter)
@@ -89,15 +89,15 @@ ApuestasFutbol/ (GOL SAINT Workspace)
 
 ---
 
-## 🗄️ Esquema Relacional de Base de Datos Local (PostgreSQL)
+## 🗄️ Estructura de Documentos y Colecciones en MongoDB
 
-El modelo relacional optimizado en [schema.sql](file:///c:/Andres/proyectos%20sofware/ApuestasFutbol/backend/src/main/resources/schema.sql) consta de las siguientes tablas:
+La estructura de base de datos no relacional optimizada está descrita en [DB Gol Saint.json](file:///c:/Andres/proyectos%20sofware/ApuestasFutbol/backend/src/main/resources/DB%20Gol%20Saint.json) y consta de las siguientes colecciones:
 
-* **`pais`**: Ubicación y banderas oficiales de las competiciones y clubes.
-* **`liga`**: Ligas oficiales en las que participan los equipos.
-* **`competicion`**: Copas, ligas o torneos internacionales sincronizados.
-* **`equipo`**: Clubes de fútbol con sus estadísticas, escudo e ID de proveedor externo.
-* **`jugador`** y **`jugador_rating`**: Perfil de futbolistas con histórico temporal de habilidades (velocidad, pase, tiro, etc.).
-* **`partido`** y **`estadistica_partido`**: Registro de enfrentamientos y métricas de juego (posesión, tiros, córners).
-* **`cuota`**: Histórico de cuotas en tiempo real por partido y casa de apuestas.
-* **`combinacion`** y **`combinacion_detalle`**: Algoritmo generador de apuestas múltiples con simulación de inversión y ganancias.
+* **`paises`**: Ubicación y banderas oficiales de las competiciones y clubes.
+* **`ligas`**: Ligas oficiales en las que participan los equipos.
+* **`competiciones`**: Copas, ligas o torneos internacionales sincronizados.
+* **`equipos`**: Clubes de fútbol con sus estadísticas, escudo e ID de proveedor externo.
+* **`jugadores`** y **`jugador_ratings`**: Perfil de futbolistas con histórico temporal de habilidades (velocidad, pase, tiro, etc.).
+* **`partidos`** y **`estadisticas_partido`**: Registro de enfrentamientos y métricas de juego (posesión, tiros, córners).
+* **`cuotas`**: Histórico de cuotas en tiempo real por partido y casa de apuestas.
+* **`combinaciones`** y **`combinacion_detalle`**: Algoritmo generador de apuestas múltiples con simulación de inversión y ganancias.

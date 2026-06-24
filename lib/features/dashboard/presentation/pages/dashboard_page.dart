@@ -15,12 +15,21 @@ import '../../../../core/widgets/glass_card.dart';
 import '../../../../core/widgets/neon_button.dart';
 import '../../../../core/widgets/gradient_text.dart';
 import '../../../../core/widgets/shimmer_text.dart';
+import '../../../../core/local/providers/local_data_providers.dart';
+import '../widgets/mundial_card.dart';
 
 class DashboardPage extends ConsumerWidget {
   const DashboardPage({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    // Sincronización incremental automática al abrir la aplicación
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ref.read(syncServiceProvider).sync();
+      // Sincronización Copa del Mundo en background (sin bloquear el UI)
+      ref.read(mundialSyncServiceProvider).syncIfNeeded();
+    });
+
     return SingleChildScrollView(
       padding: const EdgeInsets.all(24),
       child: Column(
@@ -42,6 +51,13 @@ class DashboardPage extends ConsumerWidget {
 
           // ── Tip del día ───────────────────────────────────────────────
           _TipCard(),
+          const SizedBox(height: 28),
+
+          // ── Copa del Mundo 2026 ───────────────────────────────────────
+          const GradientText('COPA DEL MUNDO 2026', style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, letterSpacing: 1)),
+          const SizedBox(height: 12),
+          const MundialCard(),
+          const SizedBox(height: 24),
         ],
       ),
     );

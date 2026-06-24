@@ -32,12 +32,15 @@ public class TeamSyncJob {
     private final PlayerSyncJob playerSyncJob;
 
     public Equipo getOrCreateEquipo(String nombre, String defaultCrestUrl) {
-        return equipoRepository.findByNombre(nombre).orElseGet(() -> {
+        Equipo equipo = equipoRepository.findByNombre(nombre).orElse(null);
+        if (equipo == null) {
             log.info("Nuevo equipo detectado: {}. Buscando multimedia en TheSportsDB...", nombre);
             String badgeUrl = defaultCrestUrl; // Usar el escudo de Football-Data como fallback inicial
             String country = "Desconocido";
 
             try {
+                // Pausa corta para respetar los límites de la API gratuita (rate limits)
+                Thread.sleep(1000);
                 Map<String, Object> details = sportsDbService.searchTeam(nombre).block();
                 if (details != null && details.get("teams") instanceof List<?> teamList && !teamList.isEmpty()) {
                     @SuppressWarnings("unchecked")
@@ -49,6 +52,9 @@ public class TeamSyncJob {
                     country = (String) teamInfo.getOrDefault("strCountry", "Desconocido");
                     log.info("Escudo obtenido para {} desde TheSportsDB: {}", nombre, sportsDbBadge != null ? "✓" : "No disponible (usando fallback)");
                 }
+            } catch (InterruptedException ie) {
+                Thread.currentThread().interrupt();
+                log.warn("Sincronización interrumpida al buscar equipo: {}", nombre);
             } catch (Exception e) {
                 log.warn("No se pudo obtener el escudo de {} desde TheSportsDB: {}. Usando fallback.", nombre, e.getMessage());
             }
@@ -66,7 +72,15 @@ public class TeamSyncJob {
             playerSyncJob.syncPlayersForTeam(nuevoEquipo);
 
             return nuevoEquipo;
-        });
+        } else {
+            // Si el equipo ya existe pero no tiene escudo, lo actualizamos con el de Football-Data
+            if ((equipo.getEscudoUrl() == null || equipo.getEscudoUrl().trim().isEmpty()) && defaultCrestUrl != null && !defaultCrestUrl.trim().isEmpty()) {
+                equipo.setEscudoUrl(defaultCrestUrl);
+                equipo = equipoRepository.save(equipo);
+                log.info("Escudo actualizado usando fallback para equipo existente: {}", nombre);
+            }
+            return equipo;
+        }
     }
 
     @Scheduled(cron = "0 0 9,21 * * *")

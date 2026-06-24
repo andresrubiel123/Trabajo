@@ -17,18 +17,23 @@ import '../../../../core/utils/pdf_generator.dart';
 class CombinacionesState {
   const CombinacionesState({
     this.combinaciones = const [],
+    this.partidosConfigurados = const [],
     this.isGenerating = false,
     this.totalBruto = 0,
+    this.totalFiltrado = 0,
     this.error,
+    this.hasMore = false,
   });
 
   final List<CombinacionEntity> combinaciones;
+  final List<PartidoEntity> partidosConfigurados;
   final bool isGenerating;
   final int totalBruto;
+  final int totalFiltrado;
   final String? error;
+  final bool hasMore;
 
-  bool get hasResults => combinaciones.isNotEmpty;
-  int get totalFiltrado => combinaciones.length;
+  bool get hasResults => totalFiltrado > 0;
   int get combinacionesEliminadas => totalBruto - totalFiltrado;
 
   /// Cuántas combinaciones se han recibido hasta ahora (alias legible).
@@ -36,35 +41,50 @@ class CombinacionesState {
 
   CombinacionesState copyWith({
     List<CombinacionEntity>? combinaciones,
+    List<PartidoEntity>? partidosConfigurados,
     bool? isGenerating,
     int? totalBruto,
+    int? totalFiltrado,
     String? error,
+    bool? hasMore,
     bool clearError = false,
   }) {
     return CombinacionesState(
       combinaciones: combinaciones ?? this.combinaciones,
+      partidosConfigurados: partidosConfigurados ?? this.partidosConfigurados,
       isGenerating: isGenerating ?? this.isGenerating,
       totalBruto: totalBruto ?? this.totalBruto,
+      totalFiltrado: totalFiltrado ?? this.totalFiltrado,
       error: clearError ? null : error ?? this.error,
+      hasMore: hasMore ?? this.hasMore,
     );
   }
 }
 
-// ── Notifier ──────────────────────────────────────────────────────────────────
-
-/// Provider que maneja la generación progresiva de combinaciones.
-class CombinacionesNotifier extends StateNotifier<CombinacionesState> {
-  CombinacionesNotifier() : super(const CombinacionesState());
+/// Provider que maneja la generación progresiva y paginación de combinaciones.
+class CombinacionesNotifier extends Notifier<CombinacionesState> {
+  @override
+  CombinacionesState build() {
+    ref.onDispose(() {
+      _cancelarIsolate();
+    });
+    return const CombinacionesState();
+  }
 
   Isolate? _isolate;
   ReceivePort? _receivePort;
+
+  // ── Paginación Virtual ───────────────────────────────────────────────────
+  final List<CombinacionEntity> _todas = [];
+  int _paginaActual = 1;
+  static const int _itemsPorPagina = 100;
 
   // ── Generación progresiva con Isolate ─────────────────────────────────────
 
   /// Genera combinaciones para la lista de partidos dada.
   ///
-  /// Las combinaciones aparecen en la UI progresivamente a medida que el
-  /// Isolate envía lotes de [AppConstants.streamingBatchSize] elementos.
+  /// Las combinaciones se almacenan internamente y se van mostrando de forma
+  /// paginada de 100 en 100 para optimizar el renderizado en la UI.
   Future<void> generar(List<PartidoEntity> partidos) async {
     if (partidos.isEmpty) {
       state = state.copyWith(error: 'Agrega al menos un partido');
@@ -73,9 +93,14 @@ class CombinacionesNotifier extends StateNotifier<CombinacionesState> {
 
     // Cancelar generación anterior si existe
     _cancelarIsolate();
+    _todas.clear();
+    _paginaActual = 1;
 
     // Estado inicial: generando, lista vacía
-    state = const CombinacionesState(isGenerating: true);
+    state = CombinacionesState(
+      isGenerating: true,
+      partidosConfigurados: partidos,
+    );
 
     _receivePort = ReceivePort();
 
@@ -91,18 +116,30 @@ class CombinacionesNotifier extends StateNotifier<CombinacionesState> {
 
   /// Procesa los mensajes enviados por el Isolate.
   void _onMensaje(dynamic mensaje) {
-    if (!mounted) return;
-
     if (mensaje is LoteCombinaciones) {
-      // Añadir el lote a la lista existente y notificar a la UI
+      final nuevas = mensaje.combinaciones;
+      _todas.addAll(nuevas);
+      
+      final visibleCount = _paginaActual * _itemsPorPagina;
+      final listaNueva = _todas.take(visibleCount).toList();
+      final hasMore = _todas.length > listaNueva.length || state.isGenerating;
+
       state = state.copyWith(
-        combinaciones: [...state.combinaciones, ...mensaje.combinaciones],
+        combinaciones: listaNueva,
+        totalFiltrado: state.totalFiltrado + nuevas.length,
+        hasMore: hasMore,
       );
     } else if (mensaje is GeneracionFinalizada) {
       // Cálculo completado
+      final visibleCount = _paginaActual * _itemsPorPagina;
+      final listaNueva = _todas.take(visibleCount).toList();
+      final hasMore = _todas.length > listaNueva.length;
+
       state = state.copyWith(
         isGenerating: false,
         totalBruto: mensaje.totalBruto,
+        combinaciones: listaNueva,
+        hasMore: hasMore,
         clearError: true,
       );
       _limpiarIsolate();
@@ -113,6 +150,21 @@ class CombinacionesNotifier extends StateNotifier<CombinacionesState> {
       );
       _limpiarIsolate();
     }
+  }
+
+  /// Carga el siguiente lote de 100 combinaciones si están disponibles.
+  void cargarMas() {
+    if (!state.hasMore) return;
+    _paginaActual++;
+    
+    final visibleCount = _paginaActual * _itemsPorPagina;
+    final listaNueva = _todas.take(visibleCount).toList();
+    final hasMore = _todas.length > listaNueva.length || state.isGenerating;
+
+    state = state.copyWith(
+      combinaciones: listaNueva,
+      hasMore: hasMore,
+    );
   }
 
   // ── Gestión del Isolate ────────────────────────────────────────────────────
@@ -132,13 +184,16 @@ class CombinacionesNotifier extends StateNotifier<CombinacionesState> {
 
   // ── Exportación ───────────────────────────────────────────────────────────
 
-  /// Exporta las combinaciones actuales como texto plano.
-  String exportarTexto() =>
-      const CombinationEngine().exportarComoTexto(state.combinaciones);
+  /// Exporta TODAS las combinaciones actuales como texto plano ejecutando un Isolate auxiliar.
+  Future<String> exportarTexto() async {
+    return CombinationEngine.exportarTextoIsolate(state.partidosConfigurados);
+  }
 
-  /// Genera y retorna el PDF de las combinaciones actuales.
+  /// Genera y retorna el PDF de las combinaciones actuales (Límite: primeras 2000).
   Future<List<int>> generarPdf() async {
-    return const PdfGenerator().generarPdf(state.combinaciones);
+    // Para el PDF exportamos las que ya están visibles o hasta 2000 si hay bastantes
+    final paraPdf = _todas.take(2000).toList();
+    return const PdfGenerator().generarPdf(paraPdf);
   }
 
   // ── Reset ─────────────────────────────────────────────────────────────────
@@ -146,19 +201,15 @@ class CombinacionesNotifier extends StateNotifier<CombinacionesState> {
   /// Limpia los resultados y cancela cualquier generación en curso.
   void limpiar() {
     _cancelarIsolate();
+    _todas.clear();
+    _paginaActual = 1;
     state = const CombinacionesState();
-  }
-
-  @override
-  void dispose() {
-    _cancelarIsolate();
-    super.dispose();
   }
 }
 
 // ── Provider ──────────────────────────────────────────────────────────────────
 
 final combinacionesProvider =
-    StateNotifierProvider<CombinacionesNotifier, CombinacionesState>(
-  (ref) => CombinacionesNotifier(),
+    NotifierProvider<CombinacionesNotifier, CombinacionesState>(
+  () => CombinacionesNotifier(),
 );

@@ -10,10 +10,18 @@ import '../../../../core/constants/app_typography.dart';
 import '../../../../core/widgets/glass_card.dart';
 import '../../domain/entities/combinacion_entity.dart';
 
-/// Tabla de combinaciones generadas con búsqueda y scroll.
+/// Tabla de combinaciones generadas con búsqueda y scroll con Lazy Loading.
 class CombinacionesTable extends StatefulWidget {
-  const CombinacionesTable({super.key, required this.combinaciones});
+  const CombinacionesTable({
+    super.key,
+    required this.combinaciones,
+    this.onLoadMore,
+    this.hasMore = false,
+  });
+
   final List<CombinacionEntity> combinaciones;
+  final VoidCallback? onLoadMore;
+  final bool hasMore;
 
   @override
   State<CombinacionesTable> createState() => _CombinacionesTableState();
@@ -21,6 +29,7 @@ class CombinacionesTable extends StatefulWidget {
 
 class _CombinacionesTableState extends State<CombinacionesTable> {
   final _searchCtrl = TextEditingController();
+  final _scrollController = ScrollController();
   List<CombinacionEntity> _filtered = [];
 
   @override
@@ -28,13 +37,13 @@ class _CombinacionesTableState extends State<CombinacionesTable> {
     super.initState();
     _filtered = widget.combinaciones;
     _searchCtrl.addListener(_onSearch);
+    _scrollController.addListener(_onScroll);
   }
 
   @override
   void didUpdateWidget(CombinacionesTable oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.combinaciones != widget.combinaciones) {
-      // Si hay búsqueda activa, re-filtrar; si no, tomar la lista completa actualizada
       final q = _searchCtrl.text.toLowerCase();
       if (q.isEmpty) {
         _filtered = widget.combinaciones;
@@ -57,9 +66,18 @@ class _CombinacionesTableState extends State<CombinacionesTable> {
     });
   }
 
+  void _onScroll() {
+    if (_scrollController.position.pixels >= _scrollController.position.maxScrollExtent - 200) {
+      if (widget.hasMore && widget.onLoadMore != null) {
+        widget.onLoadMore!();
+      }
+    }
+  }
+
   @override
   void dispose() {
     _searchCtrl.dispose();
+    _scrollController.dispose();
     super.dispose();
   }
 
@@ -101,8 +119,24 @@ class _CombinacionesTableState extends State<CombinacionesTable> {
                 // Rows
                 Expanded(
                   child: ListView.builder(
-                    itemCount: _filtered.length,
+                    controller: _scrollController,
+                    itemCount: _filtered.length + (widget.hasMore ? 1 : 0),
                     itemBuilder: (context, index) {
+                      if (index == _filtered.length) {
+                        return const Padding(
+                          padding: EdgeInsets.symmetric(vertical: 16.0),
+                          child: Center(
+                            child: SizedBox(
+                              width: 24,
+                              height: 24,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: AppColors.cyanNeon,
+                              ),
+                            ),
+                          ),
+                        );
+                      }
                       return _CombinacionRow(
                         combinacion: _filtered[index],
                         isEven: index.isEven,
@@ -194,17 +228,10 @@ class _CombinacionRowState extends State<_CombinacionRow> {
             ),
             Expanded(
               child: Text(
-                widget.combinacion.resultados
-                    .asMap()
-                    .entries
-                    .map((e) =>
-                        '${widget.combinacion.nombres[e.key]}: ${e.value}')
-                    .join(' │ '),
+                widget.combinacion.toDetallePartidosLinea(),
                 style: AppTypography.bodySmall.copyWith(
                   fontSize: 13,
-                  color: _isHovered
-                      ? AppColors.textPrimary
-                      : AppColors.textPrimary,
+                  color: AppColors.textPrimary,
                 ),
                 overflow: TextOverflow.ellipsis,
               ),

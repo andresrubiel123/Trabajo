@@ -5,7 +5,7 @@
 library;
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:hive_flutter/hive_flutter.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../../../core/constants/app_constants.dart';
 
 /// Estado de autenticación.
@@ -38,25 +38,33 @@ class AuthState {
   }
 }
 
-/// Notifier de autenticación.
-class AuthNotifier extends StateNotifier<AuthState> {
-  AuthNotifier() : super(const AuthState()) {
-    // Al inicializar, recuperamos si había una sesión activa guardada
-    final box = Hive.box(AppConstants.userBox);
-    final savedUser = box.get('session_username') as String?;
-    if (savedUser != null) {
-      state = AuthState(isAuthenticated: true, username: savedUser);
-    }
+/// Notifier de autenticación usando SharedPreferences.
+class AuthNotifier extends Notifier<AuthState> {
+  SharedPreferences? _prefs;
+
+  @override
+  AuthState build() {
+    _init();
+    return const AuthState();
+  }
+
+  Future<void> _init() async {
+    _prefs = await SharedPreferences.getInstance();
+    
+    // Limpiamos credenciales anteriores para forzar la adopción de los nuevos defaults 'aaaa'
+    await _prefs?.remove('username');
+    await _prefs?.remove('password');
+    await _prefs?.remove('session_username');
+    
+    state = const AuthState();
   }
 
   String get currentUsername {
-    final box = Hive.box(AppConstants.userBox);
-    return box.get('username', defaultValue: AppConstants.defaultUser) as String;
+    return _prefs?.getString('username') ?? AppConstants.defaultUser;
   }
 
   String get currentPassword {
-    final box = Hive.box(AppConstants.userBox);
-    return box.get('password', defaultValue: AppConstants.defaultPassword) as String;
+    return _prefs?.getString('password') ?? AppConstants.defaultPassword;
   }
 
   Future<bool> login(String username, String password) async {
@@ -67,9 +75,9 @@ class AuthNotifier extends StateNotifier<AuthState> {
 
     if (username == currentUsername &&
         password == currentPassword) {
-      // Guardar sesión activa en Hive
-      final box = Hive.box(AppConstants.userBox);
-      await box.put('session_username', username);
+      // Guardar sesión activa en SharedPreferences
+      _prefs ??= await SharedPreferences.getInstance();
+      await _prefs?.setString('session_username', username);
 
       state = state.copyWith(
         isAuthenticated: true,
@@ -87,24 +95,24 @@ class AuthNotifier extends StateNotifier<AuthState> {
   }
 
   Future<void> updateCredentials(String newUsername, String newPassword) async {
-    final box = Hive.box(AppConstants.userBox);
-    await box.put('username', newUsername);
-    await box.put('password', newPassword);
+    _prefs ??= await SharedPreferences.getInstance();
+    await _prefs?.setString('username', newUsername);
+    await _prefs?.setString('password', newPassword);
 
     if (state.isAuthenticated) {
       // Si está autenticado, actualizamos la sesión activa guardada
-      await box.put('session_username', newUsername);
+      await _prefs?.setString('session_username', newUsername);
       state = state.copyWith(username: newUsername);
     }
   }
 
   Future<void> logout() async {
-    final box = Hive.box(AppConstants.userBox);
-    await box.delete('session_username');
+    _prefs ??= await SharedPreferences.getInstance();
+    await _prefs?.remove('session_username');
     state = const AuthState();
   }
 }
 
-final authProvider = StateNotifierProvider<AuthNotifier, AuthState>(
-  (ref) => AuthNotifier(),
+final authProvider = NotifierProvider<AuthNotifier, AuthState>(
+  () => AuthNotifier(),
 );

@@ -15,6 +15,8 @@ class DotaCalendar extends StatelessWidget {
     required this.currentMonth,
     required this.onDateSelected,
     required this.onMonthChanged,
+    this.isFutureDisabled = false,
+    this.isPastDisabled = false,
   });
 
   /// La fecha actualmente seleccionada.
@@ -29,6 +31,12 @@ class DotaCalendar extends StatelessWidget {
   /// Callback ejecutado cuando el usuario cambia de mes.
   final ValueChanged<DateTime> onMonthChanged;
 
+  /// Inhabilitar la selección de fechas futuras
+  final bool isFutureDisabled;
+
+  /// Inhabilitar la selección de fechas pasadas
+  final bool isPastDisabled;
+
   @override
   Widget build(BuildContext context) {
     final firstDayOfMonth = DateTime(currentMonth.year, currentMonth.month, 1);
@@ -40,6 +48,17 @@ class DotaCalendar extends StatelessWidget {
     final leadingEmptyDays = firstWeekday - 1; // offset para que el lunes sea la primera columna
     
     final weekdays = ['LUN', 'MAR', 'MIÉ', 'JUE', 'VIE', 'SÁB', 'DOM'];
+    
+    final today = DateTime.now();
+    final todayDate = DateTime(today.year, today.month, today.day);
+    
+    final showPrevMonth = !isPastDisabled || 
+        currentMonth.year > today.year || 
+        (currentMonth.year == today.year && currentMonth.month > today.month);
+
+    final showNextMonth = !isFutureDisabled || 
+        currentMonth.year < today.year || 
+        (currentMonth.year == today.year && currentMonth.month < today.month);
     
     return Center(
       child: Container(
@@ -58,10 +77,13 @@ class DotaCalendar extends StatelessWidget {
                     iconSize: 18,
                     padding: EdgeInsets.zero,
                     constraints: const BoxConstraints(),
-                    icon: const Icon(Icons.chevron_left_rounded, color: AppColors.premiumBlue),
-                    onPressed: () {
+                    icon: Icon(
+                      Icons.chevron_left_rounded,
+                      color: showPrevMonth ? AppColors.premiumBlue : AppColors.premiumBlue.withValues(alpha: 0.2),
+                    ),
+                    onPressed: showPrevMonth ? () {
                       onMonthChanged(DateTime(currentMonth.year, currentMonth.month - 1));
-                    },
+                    } : null,
                   ),
                   Text(
                     DateFormat('MMMM yyyy', 'es').format(currentMonth).toUpperCase(),
@@ -76,10 +98,13 @@ class DotaCalendar extends StatelessWidget {
                     iconSize: 18,
                     padding: EdgeInsets.zero,
                     constraints: const BoxConstraints(),
-                    icon: const Icon(Icons.chevron_right_rounded, color: AppColors.premiumBlue),
-                    onPressed: () {
+                    icon: Icon(
+                      Icons.chevron_right_rounded,
+                      color: showNextMonth ? AppColors.premiumBlue : AppColors.premiumBlue.withValues(alpha: 0.2),
+                    ),
+                    onPressed: showNextMonth ? () {
                       onMonthChanged(DateTime(currentMonth.year, currentMonth.month + 1));
-                    },
+                    } : null,
                   ),
                 ],
               ),
@@ -122,16 +147,21 @@ class DotaCalendar extends StatelessWidget {
                   final dayNumber = index - leadingEmptyDays + 1;
                   final dayDate = DateTime(currentMonth.year, currentMonth.month, dayNumber);
                   
+                  final isFuture = dayDate.isAfter(todayDate);
+                  final isPast = dayDate.isBefore(todayDate);
+                  
+                  final isDisabled = (isFutureDisabled && isFuture) || (isPastDisabled && isPast);
+                  
                   final isSelected = dayDate.year == selectedDate.year &&
                       dayDate.month == selectedDate.month &&
                       dayDate.day == selectedDate.day;
                       
-                  final isToday = dayDate.year == DateTime.now().year &&
-                      dayDate.month == DateTime.now().month &&
-                      dayDate.day == DateTime.now().day;
+                  final isToday = dayDate.year == today.year &&
+                      dayDate.month == today.month &&
+                      dayDate.day == today.day;
                       
                   return GestureDetector(
-                    onTap: () => onDateSelected(dayDate),
+                    onTap: isDisabled ? null : () => onDateSelected(dayDate),
                     child: AnimatedContainer(
                       duration: const Duration(milliseconds: 150),
                       decoration: BoxDecoration(
@@ -140,14 +170,16 @@ class DotaCalendar extends StatelessWidget {
                             : Colors.black.withValues(alpha: 0.3),
                         borderRadius: BorderRadius.circular(4),
                         border: Border.all(
-                          color: isSelected
-                              ? AppColors.premiumBlue
-                              : isToday
-                                  ? AppColors.premiumBlue.withValues(alpha: 0.6)
-                                  : AppColors.premiumBlue.withValues(alpha: 0.25),
+                          color: isDisabled
+                              ? Colors.transparent
+                              : isSelected
+                                  ? AppColors.premiumBlue
+                                  : isToday
+                                      ? AppColors.premiumBlue.withValues(alpha: 0.6)
+                                      : AppColors.premiumBlue.withValues(alpha: 0.25),
                           width: isSelected ? 1.5 : 0.8,
                         ),
-                        boxShadow: isSelected
+                        boxShadow: isSelected && !isDisabled
                             ? [
                                 BoxShadow(
                                   color: AppColors.premiumBlue.withValues(alpha: 0.3),
@@ -162,7 +194,9 @@ class DotaCalendar extends StatelessWidget {
                           Text(
                             '$dayNumber',
                             style: AppTypography.bodyMedium.copyWith(
-                              color: AppColors.primary,
+                              color: isDisabled
+                                  ? AppColors.textSecondary.withValues(alpha: 0.2)
+                                  : AppColors.primary,
                               fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
                               fontSize: 11,
                             ),

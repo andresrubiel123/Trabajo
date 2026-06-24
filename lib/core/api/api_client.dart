@@ -1,16 +1,26 @@
 import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'dart:io' show Platform;
+import 'package:flutter/foundation.dart' show kIsWeb;
+
 class ApiClient {
   final Dio _dio;
 
   ApiClient() : _dio = Dio(
     BaseOptions(
-      baseUrl: 'http://localhost:8080/api/v1',
+      baseUrl: _getBaseUrl(),
       connectTimeout: const Duration(seconds: 15),
       receiveTimeout: const Duration(seconds: 15),
     ),
   );
+
+  static String _getBaseUrl() {
+    if (!kIsWeb && Platform.isAndroid) {
+      return 'http://10.0.2.2:8081/api/v1'; // Dirección de retorno del host en emuladores Android
+    }
+    return 'http://localhost:8081/api/v1';
+  }
 
   Dio get dio => _dio;
 

@@ -51,21 +51,25 @@ Nunca sacrificar mantenibilidad por optimizaciones prematuras.
 ---
 
 # STACK TECNOLÓGICO OFICIAL
-
+ 
 ## Frontend
-* Dart
-* Flutter Web / Mobile
-
+* Dart (Última versión estable)
+* Flutter Web / Mobile (Última versión estable)
+ 
 ## Backend
-* Java 17+
-* Spring Boot 3.x
-
+* Java 25
+* Spring Boot 4.x
+ 
 ## Base de Datos
 * MongoDB (NoSQL) - Base de datos: `gol_saint`
-
+ 
 ## Control de Versiones
 * Git
 * GitHub
+
+# 🆙 ACTUALIZACIÓN DE DEPENDENCIAS Y LIBRERÍAS (CRITICAL)
+* **Actualización Proactiva**: Todas las librerías, dependencias, frameworks y herramientas deben ser las versiones estables más recientes. Queda terminantemente prohibido utilizar dependencias obsoletas.
+* **Lección Aprendida**: Las versiones antiguas de Flutter y paquetes nativos como Rive o Riverpod causan incompatibilidades críticas inmediatas con nuevos sistemas operativos (ej: el requisito de alineación de página de 16 KB en Android 15/16). Mantener el software actualizado garantiza la longevidad del sistema por más de 5 años.
 
 ---
 

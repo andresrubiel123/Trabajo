@@ -1,14 +1,15 @@
 package com.golsaint.shared.service;
 
-import com.golsaint.shared.entity.DatabaseSequence;
+import static org.springframework.data.mongodb.core.FindAndModifyOptions.options;
+import static org.springframework.data.mongodb.core.query.Criteria.where;
+import static org.springframework.data.mongodb.core.query.Query.query;
+
 import org.springframework.context.annotation.Lazy;
 import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.stereotype.Service;
 
-import static org.springframework.data.mongodb.core.FindAndModifyOptions.options;
-import static org.springframework.data.mongodb.core.query.Criteria.where;
-import static org.springframework.data.mongodb.core.query.Query.query;
+import com.golsaint.shared.entity.DatabaseSequence;
 
 /**
  * Servicio para generar secuencias numéricas atómicas en MongoDB.
@@ -30,7 +31,7 @@ public class SequenceGeneratorService {
      */
     public long generateSequence(String seqName) {
         DatabaseSequence counter = mongoOperations.findAndModify(
-                query(where("_id").is(seqName)),
+                query(where("id").is(seqName)),
                 new Update().inc("seq", 1),
                 options().returnNew(true).upsert(true),
                 DatabaseSequence.class

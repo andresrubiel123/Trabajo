@@ -14,7 +14,6 @@ import org.springframework.web.reactive.function.client.WebClient;
  */
 
 @Configuration
-@SuppressWarnings("null")
 public class WebClientConfig {
 
     @Bean(name = "footballDataWebClient")

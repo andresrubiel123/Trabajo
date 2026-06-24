@@ -6,9 +6,9 @@ Este es un documento maestro de requerimientos estructurado para agilizar la cre
 
 ## 1. Información General
 * **Nombre del Proyecto:** [Gol Saint]
-* **Descripción:** [Aplicación móvil para predecir resultados deportivos de fútbol mediante Inteligencia Artificial y asistir a los usuarios en sus apuestas.]
-* **Objetivo Principal:** [Predecir resultados deportivos mediante IA.]
-* **Problema que resuelve:** [Falta de información centralizada, precisa y basada en datos estadísticos y modelos predictivos para tomar decisiones informadas en apuestas deportivas.]
+* **Descripción:** [Aplicación móvil para predecir resultados deportivos de fútbol mediante Algoritmos matematicos y estadísticos, Big Data Analytics e Inteligencia Artificial y asistir a los usuarios en sus apuestas.]
+* **Objetivo Principal:** [Predecir resultados deportivos mediante Big Data Analytics y asistir a los usuarios en sus apuestas, basado en patrones históricos, desempeño reciente, estadísticas de jugadores, forma de los equipos, condiciones del partido y otros factores relevantes para maximizar la precisión de las predicciones.]
+* **Problema que resuelve:** [Falta de información centralizada, precisa y basada en datos estadísticos y modelos predictivos para tomar decisiones informadas en apuestas deportivas, lo que genera incertidumbre, pérdidas financieras y decisiones basadas en intuición en lugar de datos.]
 * **Usuarios Objetivo:** [Apostadores deportivos, aficionados al fútbol, analistas de datos.]
 * **Modelo de Negocio:** [Freemium + Suscripciones + Publicidad.]
 * **Fecha:** [16/06/2026]
@@ -17,12 +17,15 @@ Este es un documento maestro de requerimientos estructurado para agilizar la cre
 ---
 
 ## 2. Tecnologías
-* **Frontend:** [Flutter]
-* **Backend:** [xxx por definir]
+* **Frontend:** [Flutter (Última versión estable)]
+* **Animaciones Interactivas:** [Rive (Última versión estable)]
+* **Backend:** [Spring Boot 4.0.0 y Java 25]
 * **Base de datos:** [No SQL Mongo DB]
+* **Cache:** [Redis]
+* **Storage:** [S3]
 * **Autenticación:** [xxx por definir]
 * **Pasarela de pago:** [xxx por definir]
-* **Hosting:** [xxx por definir]
+* **Hosting:** [AWS]
 * **Notificaciones:** [xxx por definir]
 * **Analítica:** [xxx por definir]
 
@@ -64,25 +67,30 @@ Este es un documento maestro de requerimientos estructurado para agilizar la cre
   * [Detalle partido]
   * [Estadísticas]
 
-**Módulo:** [xxx por definir]
-* **Objetivo:** [xxx por definir]
+**Módulo:** [Modelos IA]
+* **Objetivo:** [Permitir que los usuarios seleccionen distintos motores de predicción según su perfil de riesgo.]
 * **Funciones:** 
-  * [xxx por definir]
+  * [Conservador, Balanceado, Agresivo]
+  * [Value Bets, Over/Under, Ambos Equipos Marcan (BTTS)]
 * **Pantallas:** 
-  * [xxx por definir]
+  * [Selección de Modelo]
+  * [Detalle y Rendimiento del Modelo]
 
 ---
 
-## 6. Navegación
-[Splash]
-↓
-[Login]
-↓
-[Dashboard]
- ├─ [Predicciones]
- ├─ [Estadísticas]
- ├─ [Perfil]
- └─ [Configuración]
+## 6. Arquitectura de Navegación (Responsive)
+**Móvil (< 768px): Bottom Navigation Bar**
+* Inicio, Predicciones, Combinadas, Resultados, Perfil.
+* *Objetivo:* Navegación rápida con una sola mano, menor consumo de espacio visual.
+
+**Tablet (768px - 1200px): Navigation Rail**
+* Dashboard, Predicciones, Combinadas, Historial, Resultados, Configuración.
+* *Objetivo:* Menú lateral compacto, iconos permanentes visibles.
+
+**Escritorio y Web (> 1200px): Persistent Sidebar Layout**
+* *Sidebar:* Logo, Dashboard, Predicciones, Generar Combinadas, Modelos IA, Historial, Resultados, Ranking, Configuración.
+* *Panel Principal:* Calendario, Filtros, Predicciones, Estadísticas, Análisis IA, Gráficos.
+* *Objetivo:* Maximizar productividad y facilitar análisis avanzados.
 
 ---
 
@@ -142,14 +150,19 @@ Este es un documento maestro de requerimientos estructurado para agilizar la cre
 
 ---
 
-## 10. Diseño UI
-* **Color Primario:** [xxx por definir]
-* **Color Secundario:** [xxx por definir]
+## 10. Diseño UI y Design Tokens
+* **Color Primario:** [Negro profundo]
+* **Color Secundario:** [Azul eléctrico]
+* **Color de Acento:** [Naranja de acento]
 * **Tema:**
-  * [xxx por definir] Claro
-  * [xxx por definir] Oscuro
-* **Tipografía:** [xxx por definir]
-* **Estilo:** [Moderno Deportivo]
+  * [ ] Claro
+  * [x] Oscuro (Tema por defecto)
+* **Tipografía / Fuente Principal:** [Google Fonts - Inter]
+* **Estilo:** [Deportivo futurista, animaciones suaves y ligeras]
+* **Componentes clave:** [Uso de tarjetas (Cards) para predicciones]
+* **Espaciado base:** [Múltiplos de 8px]
+* **Bordes redondeados (Radius):** [12px para tarjetas, 8px para botones]
+* **Paquete de Iconos:** [Cupertino Icons / FontAwesome / Material]
 
 ---
 
@@ -207,26 +220,31 @@ Este es un documento maestro de requerimientos estructurado para agilizar la cre
 
 ---
 
-## 15. Backend y Árbol de Carpetas
-**¿Va a tener Backend?** [xxx por definir]
-**Tecnologías a usar:** [xxx por definir]
+## 15. Estructura de Carpetas y Breakpoints (Flutter)
+**Breakpoints Oficiales:**
+* Mobile: `< 768 px`
+* Tablet: `768 - 1200 px`
+* Desktop/Web: `> 1200 px`
 
-**Árbol de carpetas sugerido (Backend):**
-```
-[xxx por definir]
-```
+**Regla de Diseño Responsive:**
+Cada plataforma debe tener su propio layout principal evitando múltiples condicionales distribuidos por toda la aplicación.
 
-**Árbol de carpetas actual (Frontend - Flutter):**
-```
+**Estructura de Carpetas Sugerida (Frontend):**
+```text
 lib/
  ├─ core/
  ├─ features/
- │   └─ predicciones/
- │       └─ presentation/
- │           └─ widgets/
- │               └─ prediction_match_card.dart
- ├─ main.dart
+ ├─ shared/
+ ├─ mobile/
+ ├─ tablet/
+ ├─ desktop/
+ ├─ widgets/
+ └─ main.dart
 ```
+
+**Backend:**
+* **¿Va a tener Backend?** [Sí, Spring Boot 4.0.0]
+* **Tecnologías a usar:** [Java 25, MongoDB, Redis, S3]
 
 ---
 
@@ -243,12 +261,138 @@ Para este proyecto en específico, la documentación principal se divide en los 
 
 ---
 
-## 16. Prompt Maestro
+## 16. Requerimientos Funcionales
+* **RF-001:** [El usuario podrá registrarse.]
+* **RF-002:** [El usuario podrá iniciar sesión.]
+* **RF-003:** [El usuario podrá guardar predicciones.]
+* **RF-004:** [xxx por definir]
+
+---
+
+## 17. Requerimientos No Funcionales
+* **RNF-001:** [Tiempo de respuesta menor a 2 segundos.]
+* **RNF-002:** [Disponibilidad 99.9%.]
+* **RNF-003:** [Compatible con Android, iOS y Web.]
+* **RNF-004:** [xxx por definir]
+
+---
+
+## 18. Casos de Uso
+**Actor:** [Usuario]
+* **Caso:** [Crear cuenta]
+* **Flujo:**
+  1. [Ingresa correo]
+  2. [Ingresa contraseña]
+  3. [Confirma]
+  4. [Sistema valida]
+  5. [Sistema crea cuenta]
+
+**Actor:** [xxx por definir]
+* **Caso:** [xxx por definir]
+* **Flujo:**
+  1. [xxx por definir]
+
+---
+
+## 19. Reglas de Negocio
+* **RN-001:** [Un usuario gratuito puede ver máximo 5 predicciones diarias.]
+* **RN-002:** [Solo usuarios Premium pueden acceder a modelos avanzados.]
+* **RN-003:** [Una suscripción vencida pierde acceso.]
+* **RN-004:** [xxx por definir]
+
+---
+
+## 20. 🚨 Restricciones del Dominio (CRITICAL)
+* **SOCCER DATA ONLY:** [Prohibición estricta de introducir datos, APIs o lógica de otros deportes. Todo debe girar en torno al fútbol.]
+* **APIs Externas:** [Utilizar exclusivamente APIs de datos de fútbol (ej. Football-Data.org o TheSportsDB).]
+* **UP-TO-DATE DEPENDENCIES & COMPILATION:** [Todas las dependencias, librerías y programas utilizados deben mantenerse en sus versiones estables más actualizadas. Queda prohibido el uso de versiones obsoletas para evitar incompatibilidades futuras con nuevas plataformas (ej. restricciones de alineación de página de 16 KB en Android 15/16) y asegurar la longevidad del sistema por más de 5 años.]
+
+---
+
+## 21. Convenciones de Código y Librerías Estándar
+**Librerías / Tech Stack Detallado:**
+* **Manejo de Estado:** [Ej: Bloc / Cubit]
+* **Inyección de Dependencias:** [Ej: get_it + injectable]
+* **Inmutabilidad y JSON:** [Ej: Freezed + json_serializable]
+* **Navegación:** [Ej: go_router]
+* **Peticiones HTTP:** [Ej: dio + retrofit]
+
+**Buenas Prácticas y Límites Cognitivos:**
+* **Nomenclatura:** [Usar camelCase para variables/funciones, PascalCase para clases, snake_case para archivos.]
+* **Calidad de Código:** [Código limpio, altamente reutilizable, DRY (Don't Repeat Yourself) y KISS.]
+* **Límites de Tamaño:** [Archivos: Máximo 200 líneas (alerta), 300 (refactorizar). Métodos: Máximo 30 líneas.]
+* **Idioma en Código:** [Código 100% en inglés. Comentarios (DartDoc/JavaDoc) 100% en español. UI en español.]
+
+---
+
+## 22. Diccionario de Dominio (Ubiquitous Language)
+* **Cuota** = `Odds` (No *Quota*)
+* **Apuesta** = `Bet`
+* **Pronosticador** = `Tipster`
+* **Empate** = `Draw`
+* **[xxx por definir]** = `[xxx por definir]`
+
+---
+
+## 23. Estrategia de Pruebas (Testing)
+* **Regla:** [Solo pruebas unitarias para la capa Domain y Data. Ignorar UI testing en el MVP. Cobertura mínima del 80%.]
+* **Herramientas:** [flutter_test, mocktail]
+
+---
+
+## 24. Configuración de Entornos y CI/CD
+* **Entornos:** [Dev, Staging, Prod]
+* **Distribución:** [Fastlane / Codemagic / GitHub Actions]
+
+---
+
+## 25. Observabilidad (Manejo de Errores y Analítica)
+* **Crashlytics:** [Ej: Sentry o Firebase Crashlytics]
+* **Eventos de Usuario:** [Ej: Firebase Analytics o Mixpanel]
+
+---
+
+## 26. Optimización y Rendimiento (Flutter)
+* **Widgets:** [Usar `const` siempre que sea posible para optimizar el árbol de widgets.]
+* **Listas:** [Usar siempre `ListView.builder` para renderizar listas largas.]
+* **Complejidad:** [Evaluar la complejidad temporal O(n) y espacial en la lógica crítica de negocio.]
+
+---
+
+## 27. Documentación Obligatoria
+Todo archivo debe incluir en su cabecera/título principal el autor: **Autor: Rubiel Andres Diaz**.
+Toda clase pública y toda función pública debe documentarse sin excepción. No documentar obviedades.
+
+**Reglas por Tecnología:**
+* **Java:** JavaDoc obligatorio. Autor: Rubiel Andres Diaz.
+* **Dart / Flutter:** DartDoc obligatorio (comentarios con `///`). Autor: Rubiel Andres Diaz.
+* **Otras Tecnologías:** Usar la convención oficial de Docs de la tecnología. Autor: Rubiel Andres Diaz.
+
+
+**Contenido Obligatorio de la Documentación:**
+* Qué hace.
+* Parámetros.
+* Retorno.
+* Posibles excepciones.
+* Restricciones importantes.
+
+---
+
+## 28. Definition of Done (Criterios de Aceptación)
+* [ ] Código limpio y debidamente formateado.
+* [ ] DartDoc/JavaDoc completo según la regla de la Sección 27.
+* [ ] Validaciones robustas de entradas y null-safety aplicadas.
+* [ ] Internacionalización (i18n) implementada (sin textos quemados en los Widgets).
+
+---
+
+## 29. Prompt Maestro
 **Al iniciar cualquier interacción con este documento, el agente debe leer lo siguiente:**
 
 > Actúa como Arquitecto Senior Flutter.
 > 
 > Toda propuesta debe:
+> - Respetar estrictamente la regla SOCCER DATA ONLY.
 > - Reducir costos cloud.
 > - Escalar a 1 millón de usuarios.
 > - Seguir Clean Architecture.

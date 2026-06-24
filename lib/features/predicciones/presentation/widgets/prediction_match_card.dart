@@ -1,26 +1,36 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_typography.dart';
 import '../../../../core/widgets/glass_card.dart';
 import '../../../../core/api/models/fixture_model.dart';
+import '../../../../core/widgets/team_logo.dart';
+import '../providers/seleccion_partidos_provider.dart';
 
 /// Tarjeta de predicción detallada para un encuentro de fútbol.
 /// 
 /// Muestra probabilidades de victoria, picks sugeridos por el modelo IA
 /// y métricas de ataque y defensa avanzadas.
-class PredictionMatchCard extends StatelessWidget {
+class PredictionMatchCard extends ConsumerWidget {
   /// Constructor para [PredictionMatchCard].
   const PredictionMatchCard({
     super.key,
     required this.match,
+    this.isSelectionMode = true,
   });
 
   /// El partido a predecir.
   final FixtureModel match;
 
+  /// Si es true, muestra los botones de selección 1/X/2 para combinaciones.
+  final bool isSelectionMode;
+
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    ref.watch(seleccionPartidosProvider);
+    final selectionNotifier = ref.read(seleccionPartidosProvider.notifier);
+
     final localName = match.teams.home.name;
     final visitingName = match.teams.away.name;
     
@@ -52,6 +62,8 @@ class PredictionMatchCard extends StatelessWidget {
 
     final matchTime = DateTime.tryParse(match.fixture.date) ?? DateTime.now();
     final formattedTime = DateFormat('HH:mm').format(matchTime);
+
+    final isMatchSelected = selectionNotifier.estaSeleccionado(matchId);
 
     return GlassCard(
       padding: const EdgeInsets.all(20),
@@ -119,16 +131,13 @@ class PredictionMatchCard extends StatelessWidget {
                       textAlign: TextAlign.end,
                     ),
                     const SizedBox(width: 12),
-                    if (match.teams.home.logo != null)
-                      Image.network(
-                        match.teams.home.logo!,
-                        width: 34,
-                        height: 34,
-                        errorBuilder: (context, error, stackTrace) =>
-                            const Icon(Icons.sports_soccer, size: 24, color: AppColors.textSecondary),
-                      )
-                    else
-                      const Icon(Icons.sports_soccer, size: 24, color: AppColors.textSecondary),
+                    TeamLogo(
+                      logoUrl: match.teams.home.logo,
+                      width: 34,
+                      height: 34,
+                      fallbackIcon: Icons.sports_soccer,
+                      fallbackIconSize: 24,
+                    ),
                   ],
                 ),
               ),
@@ -141,9 +150,11 @@ class PredictionMatchCard extends StatelessWidget {
                     borderRadius: BorderRadius.circular(8),
                     border: Border.all(color: AppColors.premiumBlue.withValues(alpha: 0.2)),
                   ),
-                  child: const Text(
-                    'VS',
-                    style: TextStyle(
+                  child: Text(
+                    match.fixture.status.short == 'FT'
+                        ? '${match.goals.home ?? 0} - ${match.goals.away ?? 0}'
+                        : 'VS',
+                    style: const TextStyle(
                       fontSize: 12,
                       fontWeight: FontWeight.bold,
                       color: AppColors.premiumBlue,
@@ -155,16 +166,13 @@ class PredictionMatchCard extends StatelessWidget {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.start,
                   children: [
-                    if (match.teams.away.logo != null)
-                      Image.network(
-                        match.teams.away.logo!,
-                        width: 34,
-                        height: 34,
-                        errorBuilder: (context, error, stackTrace) =>
-                            const Icon(Icons.sports_soccer, size: 24, color: AppColors.textSecondary),
-                      )
-                    else
-                      const Icon(Icons.sports_soccer, size: 24, color: AppColors.textSecondary),
+                    TeamLogo(
+                      logoUrl: match.teams.away.logo,
+                      width: 34,
+                      height: 34,
+                      fallbackIcon: Icons.sports_soccer,
+                      fallbackIconSize: 24,
+                    ),
                     const SizedBox(width: 12),
                     Text(
                       visitingName,
@@ -300,6 +308,69 @@ class PredictionMatchCard extends StatelessWidget {
           ),
           const SizedBox(height: 16),
 
+          // Selector de signos (1 / X / 2) para combinaciones
+          if (isSelectionMode) ...[
+            const Divider(color: AppColors.premiumBlue, height: 1, thickness: 0.3),
+            const SizedBox(height: 12),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text(
+                  'SELECCIONAR PARA COMBINACIONES:',
+                  style: TextStyle(
+                    fontSize: 10,
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.textSecondary,
+                  ),
+                ),
+                if (isMatchSelected)
+                  Text(
+                    'MARCADO',
+                    style: TextStyle(
+                      fontSize: 10,
+                      fontWeight: FontWeight.bold,
+                      color: const Color(0xFF39FF14),
+                      shadows: [
+                        Shadow(
+                          color: const Color(0xFF39FF14).withValues(alpha: 0.5),
+                          blurRadius: 4,
+                        ),
+                      ],
+                    ),
+                  ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            Row(
+              children: [
+                Expanded(
+                  child: _buildSelectionButton(
+                    label: 'Local (1)',
+                    isSelected: selectionNotifier.tieneSigno(matchId, '1'),
+                    onTap: () => selectionNotifier.toggleSigno(match, '1'),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: _buildSelectionButton(
+                    label: 'Empate (X)',
+                    isSelected: selectionNotifier.tieneSigno(matchId, 'X'),
+                    onTap: () => selectionNotifier.toggleSigno(match, 'X'),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: _buildSelectionButton(
+                    label: 'Visitante (2)',
+                    isSelected: selectionNotifier.tieneSigno(matchId, '2'),
+                    onTap: () => selectionNotifier.toggleSigno(match, '2'),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+          ],
+
           // Fila 4: Recomendación y botón de detalles de modelo
           const Divider(color: AppColors.premiumBlue, height: 1, thickness: 0.3),
           const SizedBox(height: 12),
@@ -370,6 +441,45 @@ class PredictionMatchCard extends StatelessWidget {
             },
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildSelectionButton({
+    required String label,
+    required bool isSelected,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 150),
+        padding: const EdgeInsets.symmetric(vertical: 10),
+        alignment: Alignment.center,
+        decoration: BoxDecoration(
+          color: isSelected ? AppColors.premiumBlue.withValues(alpha: 0.15) : Colors.black,
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(
+            color: isSelected ? AppColors.premiumBlue : AppColors.premiumBlue.withValues(alpha: 0.25),
+            width: isSelected ? 1.5 : 0.8,
+          ),
+          boxShadow: isSelected
+              ? [
+                  BoxShadow(
+                    color: AppColors.premiumBlue.withValues(alpha: 0.25),
+                    blurRadius: 6,
+                  )
+                ]
+              : null,
+        ),
+        child: Text(
+          label,
+          style: TextStyle(
+            fontSize: 11,
+            fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+            color: isSelected ? AppColors.premiumBlue : AppColors.textPrimary,
+          ),
+        ),
       ),
     );
   }

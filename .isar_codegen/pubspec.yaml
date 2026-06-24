@@ -1,0 +1,13 @@
+name: isar_codegen_helper
+description: Proyecto auxiliar para generar archivos .g.dart de Isar sin conflicto con riverpod_generator
+
+environment:
+  sdk: ">=3.0.0 <4.0.0"
+
+dependencies:
+  isar: ^3.1.0+1
+  isar_flutter_libs: ^3.1.0+1
+
+dev_dependencies:
+  build_runner: ^2.3.0
+  isar_generator: ^3.1.0+1

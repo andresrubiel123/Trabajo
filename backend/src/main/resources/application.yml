@@ -1,9 +1,8 @@
 spring:
   application:
     name: gol-saint-backend
-  data:
-    mongodb:
-      uri: mongodb://localhost:27017/gol_saint
+  mongodb:
+    uri: mongodb://localhost:27017/gol_saint
 
 # =====================================================
 # GOL SAINT - Configuración de APIs Externas
@@ -13,7 +12,7 @@ api:
   sportsdb:
     base-url: https://www.thesportsdb.com/api/v1/json
     # API Key gratuita de TheSportsDB (usuario: RubielFullStack)
-    api-key: "123"
+    api-key: "3"
 
   footballdata:
     base-url: https://api.football-data.org/v4
@@ -71,4 +70,4 @@ api:
         tipo: "LIGA"
 
 server:
-  port: 8080
+  port: 8081

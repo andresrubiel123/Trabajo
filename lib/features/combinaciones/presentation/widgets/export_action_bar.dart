@@ -32,14 +32,16 @@ class ExportActionBar extends ConsumerWidget {
             child: NeonButton(
               label: 'COPIAR',
               icon: Icons.copy_rounded,
-              onPressed: () {
-                final texto = notifier.exportarTexto();
+              onPressed: () async {
+                final texto = await notifier.exportarTexto();
                 Clipboard.setData(ClipboardData(text: texto));
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Combinaciones copiadas al portapapeles'),
-                  ),
-                );
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Combinaciones copiadas al portapapeles'),
+                    ),
+                  );
+                }
               },
               isOutlined: true,
               color: AppColors.primary,
@@ -53,7 +55,7 @@ class ExportActionBar extends ConsumerWidget {
               icon: Icons.text_snippet_outlined,
               onPressed: () async {
                 try {
-                  final texto = notifier.exportarTexto();
+                  final texto = await notifier.exportarTexto();
                   final path = await helper.exportarTxt(contenido: texto);
                   if (context.mounted) {
                     ScaffoldMessenger.of(context).showSnackBar(

@@ -33,6 +33,8 @@ public class PlayerSyncJob {
 
     public void syncPlayersForTeam(Equipo equipo) {
         try {
+            // Pausa corta para respetar los límites de la API gratuita (rate limits)
+            Thread.sleep(1000);
             Map<String, Object> playersData = sportsDbService.getPlayersByTeam(equipo.getNombre()).block();
             if (playersData != null && playersData.get("player") instanceof List playersList) {
                 log.info("Importando {} jugadores para el equipo: {}", playersList.size(), equipo.getNombre());
@@ -62,6 +64,9 @@ public class PlayerSyncJob {
                     }
                 }
             }
+        } catch (InterruptedException ie) {
+            Thread.currentThread().interrupt();
+            log.warn("Sincronización interrumpida al buscar jugadores del equipo: {}", equipo.getNombre());
         } catch (Exception e) {
             log.warn("No se pudieron importar jugadores para {}: {}", equipo.getNombre(), e.getMessage());
         }

@@ -1,0 +1,19 @@
+{
+  "version": 1,
+  "ligas": [
+    { "externalId": 39,  "nombre": "Premier League",      "pais": "Inglaterra",   "logoUrl": "https://media.api-sports.io/football/leagues/39.png",  "banderaUrl": "https://media.api-sports.io/flags/gb.svg", "temporada": 2025 },
+    { "externalId": 140, "nombre": "La Liga",             "pais": "España",       "logoUrl": "https://media.api-sports.io/football/leagues/140.png", "banderaUrl": "https://media.api-sports.io/flags/es.svg", "temporada": 2025 },
+    { "externalId": 135, "nombre": "Serie A",             "pais": "Italia",       "logoUrl": "https://media.api-sports.io/football/leagues/135.png", "banderaUrl": "https://media.api-sports.io/flags/it.svg", "temporada": 2025 },
+    { "externalId": 78,  "nombre": "Bundesliga",          "pais": "Alemania",     "logoUrl": "https://media.api-sports.io/football/leagues/78.png",  "banderaUrl": "https://media.api-sports.io/flags/de.svg", "temporada": 2025 },
+    { "externalId": 61,  "nombre": "Ligue 1",             "pais": "Francia",      "logoUrl": "https://media.api-sports.io/football/leagues/61.png",  "banderaUrl": "https://media.api-sports.io/flags/fr.svg", "temporada": 2025 },
+    { "externalId": 2,   "nombre": "Champions League",    "pais": "Europa",       "logoUrl": "https://media.api-sports.io/football/leagues/2.png",   "banderaUrl": "https://media.api-sports.io/flags/eu.svg", "temporada": 2025 },
+    { "externalId": 3,   "nombre": "Europa League",       "pais": "Europa",       "logoUrl": "https://media.api-sports.io/football/leagues/3.png",   "banderaUrl": "https://media.api-sports.io/flags/eu.svg", "temporada": 2025 },
+    { "externalId": 4,   "nombre": "Conference League",   "pais": "Europa",       "logoUrl": "https://media.api-sports.io/football/leagues/4.png",   "banderaUrl": "https://media.api-sports.io/flags/eu.svg", "temporada": 2025 },
+    { "externalId": 94,  "nombre": "Primeira Liga",       "pais": "Portugal",     "logoUrl": "https://media.api-sports.io/football/leagues/94.png",  "banderaUrl": "https://media.api-sports.io/flags/pt.svg", "temporada": 2025 },
+    { "externalId": 88,  "nombre": "Eredivisie",          "pais": "Países Bajos", "logoUrl": "https://media.api-sports.io/football/leagues/88.png",  "banderaUrl": "https://media.api-sports.io/flags/nl.svg", "temporada": 2025 },
+    { "externalId": 262, "nombre": "Liga MX",             "pais": "México",       "logoUrl": "https://media.api-sports.io/football/leagues/262.png", "banderaUrl": "https://media.api-sports.io/flags/mx.svg", "temporada": 2025 },
+    { "externalId": 71,  "nombre": "Brasileirao Serie A", "pais": "Brasil",       "logoUrl": "https://media.api-sports.io/football/leagues/71.png",  "banderaUrl": "https://media.api-sports.io/flags/br.svg", "temporada": 2025 },
+    { "externalId": 128, "nombre": "Liga Profesional",    "pais": "Argentina",    "logoUrl": "https://media.api-sports.io/football/leagues/128.png", "banderaUrl": "https://media.api-sports.io/flags/ar.svg", "temporada": 2025 },
+    { "externalId": 1,   "nombre": "Copa Mundial FIFA 2026", "pais": "Mundial", "logoUrl": "https://media.api-sports.io/football/leagues/1.png", "banderaUrl": "https://upload.wikimedia.org/wikipedia/en/thumb/8/8c/FIFA_logo.svg/320px-FIFA_logo.svg.png", "temporada": 2026 }
+  ]
+}

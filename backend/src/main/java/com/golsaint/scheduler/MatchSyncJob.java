@@ -39,7 +39,9 @@ public class MatchSyncJob {
     private final PartidoRepository partidoRepository;
     private final EstadisticaPartidoRepository estadisticaPartidoRepository;
 
-    @Scheduled(cron = "0 0 */6 * * *")
+    
+
+    @Scheduled(cron = "0 0 */2 * * *")
     @Transactional
     public void runSync() {
         log.info("====== GOL SAINT: Iniciando sincronización de datos de partidos ======");
@@ -87,7 +89,15 @@ public class MatchSyncJob {
             return;
         }
 
-        Competicion competicion = competitionSyncJob.getOrCreateCompeticion(comp);
+        String emblemUrl = null;
+        if (rawData.get("competition") instanceof Map<?, ?> compMap) {
+            emblemUrl = (String) compMap.get("emblem");
+        }
+        if ((emblemUrl == null || emblemUrl.trim().isEmpty()) && rawData.get("area") instanceof Map<?, ?> areaMap) {
+            emblemUrl = (String) areaMap.get("flag");
+        }
+
+        Competicion competicion = competitionSyncJob.getOrCreateCompeticion(comp, emblemUrl);
         @SuppressWarnings("unchecked")
         List<Map<String, Object>> matches = (List<Map<String, Object>>) rawData.get("matches");
         log.info("Partidos encontrados en {}: {}", comp.getNombre(), matches.size());

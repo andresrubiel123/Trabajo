@@ -12,8 +12,8 @@ class AppConstants {
   static const String appTagline = 'COMBINADOR PROFESIONAL';
 
   // ── Auth ──────────────────────────────────────────────────────────────
-  static const String defaultUser = '@ndresganadinero';
-  static const String defaultPassword = 'muchodinero';
+  static const String defaultUser = 'aaaa';
+  static const String defaultPassword = 'aaaa';
 
   // ── Lógica de combinaciones ──────────────────────────────────────────
   static const int maxConsecutivosIguales = 4;
@@ -31,15 +31,13 @@ class AppConstants {
 
   static const List<String> resultadosCortos = ['L', 'E', 'V'];
 
-  // ── Hive Box Names ────────────────────────────────────────────────────
-  static const String historialBox = 'historial_box';
-  static const String configBox = 'config_box';
-  static const String userBox = 'user_box';
+  // ── Isar / Sync ───────────────────────────────────────────────────────────
+  /// Nombre de la base de datos Isar.
+  static const String isarDbName = 'gol_saint';
 
-  // ── Hive Type IDs ─────────────────────────────────────────────────────
-  static const int sesionModelTypeId = 0;
-  static const int combinacionModelTypeId = 1;
-  static const int partidoModelTypeId = 2;
+  /// Versión del seed actualmente incluido en la APK.
+  /// Incrementar cuando se actualicen los archivos JSON seed.
+  static const int seedVersion = 1;
 
   // ── Responsive Breakpoints ────────────────────────────────────────────
   /// Ancho máximo para layout mobile (BottomNavigationBar).

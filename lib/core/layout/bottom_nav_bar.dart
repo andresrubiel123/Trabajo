@@ -56,6 +56,12 @@ const _destinations = [
     route: AppRoutes.estadisticas,
   ),
   _BottomNavDestination(
+    label: 'VIP',
+    icon: Icons.star_outline_rounded,
+    activeIcon: Icons.star_rounded,
+    route: AppRoutes.premium,
+  ),
+  _BottomNavDestination(
     label: 'Config.',
     icon: Icons.settings_outlined,
     activeIcon: Icons.settings_rounded,
@@ -144,6 +150,11 @@ class _BottomNavItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final color = isActive ? AppColors.primary : AppColors.navInactive;
+    final screenWidth = MediaQuery.of(context).size.width;
+
+    // Autoconfiguración adaptativa de tamaños según el ancho de pantalla
+    final double iconSize = screenWidth < 400 ? 18.0 : 20.0;
+    final double fontSize = screenWidth < 400 ? 8.5 : 9.5;
 
     return Expanded(
       child: GestureDetector(
@@ -151,7 +162,7 @@ class _BottomNavItem extends StatelessWidget {
         behavior: HitTestBehavior.opaque,
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 200),
-          padding: const EdgeInsets.symmetric(vertical: 6),
+          padding: const EdgeInsets.symmetric(vertical: 4),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             mainAxisAlignment: MainAxisAlignment.center,
@@ -178,17 +189,17 @@ class _BottomNavItem extends StatelessWidget {
               Icon(
                 isActive ? destination.activeIcon : destination.icon,
                 color: color,
-                size: 22,
+                size: iconSize,
               ),
               const SizedBox(height: 2),
               Text(
                 destination.label,
                 style: TextStyle(
                   color: color,
-                  fontSize: 10,
+                  fontSize: fontSize,
                   fontWeight:
                       isActive ? FontWeight.w600 : FontWeight.w400,
-                  letterSpacing: 0.2,
+                  letterSpacing: 0.1,
                 ),
                 overflow: TextOverflow.ellipsis,
               ),

@@ -15,4 +15,8 @@ class AppRoutes {
   static const String historial = '/historial';
   static const String estadisticas = '/estadisticas';
   static const String configuracion = '/configuracion';
+  static const String premium = '/premium';
+
+  /// Ruta de la pantalla Copa del Mundo 2026.
+  static const String mundial = '/mundial';
 }

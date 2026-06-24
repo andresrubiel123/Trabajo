@@ -5,8 +5,10 @@
 library;
 
 import 'dart:isolate';
-import '../../features/combinaciones/domain/entities/partido_entity.dart';
+import 'dart:typed_data';
+
 import '../../features/combinaciones/domain/entities/combinacion_entity.dart';
+import '../../features/combinaciones/domain/entities/partido_entity.dart';
 import '../constants/app_constants.dart';
 
 // ── Mensajes del protocolo Isolate ──────────────────────────────────────────
@@ -107,9 +109,17 @@ class CombinationEngine {
       return;
     }
 
-    // Opciones por partido: si está fijo → solo esa opción; si no → L/E/V
+    // Opciones por partido: si está fijo → solo esa opción; si tiene selección → solo esas opciones; si no → L/E/V
     final opciones = partidos.map((p) {
       if (p.tieneFijo) return [p.resultadoFijo!];
+      if (p.resultadosSeleccionados.isNotEmpty) {
+        return p.resultadosSeleccionados.map((s) {
+          if (s == '1') return 'Local';
+          if (s == 'X') return 'Empate';
+          if (s == '2') return 'Visitante';
+          return s;
+        }).toList();
+      }
       return AppConstants.resultadosDisponibles;
     }).toList();
 
@@ -134,9 +144,17 @@ class CombinationEngine {
       final variables = [for (final i in indicesVariables) resultados[i]];
       if (_tieneMasDeNConsecutivos(variables, maxConsecutivos)) continue;
 
+      final resultadosCodificados = Uint8List.fromList(
+        resultados.map((res) {
+          if (res == 'Local') return 1;
+          if (res == 'Empate') return 0;
+          return 2; // 'Visitante'
+        }).toList(),
+      );
+
       lote.add(CombinacionEntity(
         indice: indiceFiltrado++,
-        resultados: resultados,
+        resultadosCodificados: resultadosCodificados,
         nombres: [for (final p in partidos) p.nombre],
       ));
 
@@ -196,7 +214,9 @@ class CombinationEngine {
   int calcularTotal(List<PartidoEntity> partidos) {
     if (partidos.isEmpty) return 0;
     return partidos.fold(1, (acc, p) {
-      return acc * (p.tieneFijo ? 1 : AppConstants.resultadosDisponibles.length);
+      if (p.tieneFijo) return acc * 1;
+      if (p.resultadosSeleccionados.isNotEmpty) return acc * p.resultadosSeleccionados.length;
+      return acc * AppConstants.resultadosDisponibles.length;
     });
   }
 
@@ -211,5 +231,56 @@ class CombinationEngine {
       buffer.writeln(c.toTextoLinea());
     }
     return buffer.toString();
+  }
+
+  /// Exporta TODAS las combinaciones directamente a un gran String corriendo en un Isolate separado.
+  /// Esto evita congelar el hilo principal y usar demasiada RAM reteniendo las entidades.
+  static Future<String> exportarTextoIsolate(List<PartidoEntity> partidos, {int maxConsecutivos = AppConstants.maxConsecutivosIguales}) {
+    return Isolate.run(() {
+      final engine = const CombinationEngine();
+      return engine._generarStringCompleto(partidos, maxConsecutivos);
+    });
+  }
+
+  String _generarStringCompleto(List<PartidoEntity> partidos, int maxConsecutivos) {
+    if (partidos.isEmpty) return 'Sin partidos.';
+
+    final opciones = partidos.map((p) {
+      if (p.tieneFijo) return [p.resultadoFijo!];
+      if (p.resultadosSeleccionados.isNotEmpty) {
+        return p.resultadosSeleccionados.map((s) {
+          if (s == '1') return 'Local';
+          if (s == 'X') return 'Empate';
+          if (s == '2') return 'Visitante';
+          return s;
+        }).toList();
+      }
+      return AppConstants.resultadosDisponibles;
+    }).toList();
+    final indicesVariables = [for (int i = 0; i < partidos.length; i++) if (!partidos[i].tieneFijo) i];
+    final totalBruto = opciones.fold<int>(1, (acc, o) => acc * o.length);
+
+    final buffer = StringBuffer();
+    int indiceFiltrado = 1;
+    final nombres = partidos.map((p) => p.nombre).toList();
+
+    for (int idx = 0; idx < totalBruto; idx++) {
+      final resultados = _decodificarIndice(idx, opciones);
+      
+      final variables = [for (final i in indicesVariables) resultados[i]];
+      if (_tieneMasDeNConsecutivos(variables, maxConsecutivos)) continue;
+
+      final partes = List.generate(resultados.length, (i) => '${nombres[i]}: ${resultados[i]}');
+      buffer.writeln('${indiceFiltrado++}. ${partes.join(' | ')}');
+    }
+
+    final totalFiltrado = indiceFiltrado - 1;
+    final header = StringBuffer();
+    header.writeln('GOL SAINT — Combinaciones Generadas');
+    header.writeln('Total: $totalFiltrado combinaciones');
+    header.writeln('=' * 60);
+    header.writeln();
+    
+    return header.toString() + buffer.toString();
   }
 }

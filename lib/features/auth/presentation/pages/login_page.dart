@@ -104,7 +104,7 @@ class _LoginPageState extends ConsumerState<LoginPage>
                 child: SlideTransition(
                   position: _cardSlide,
                   child: SizedBox(
-                    width: min(440, size.width - 48),
+                    width: max(0.0, min(440.0, size.width - 48.0)),
                     child: GlassCard(
                       blur: 20,
                       backgroundOpacity: 0.08,
